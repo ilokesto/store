@@ -1,0 +1,36 @@
+{
+  "name": "@ilokesto/store",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rm -rf dist && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilokesto/store"
+  },
+  "homepage": "https://ilokesto.ayden94.com/ko/store",
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Jeong Jinho <wpfekdml@me.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^6.0.2"
+  }
+}
