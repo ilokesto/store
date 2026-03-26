@@ -9,15 +9,15 @@ export class Store<T> {
     this.state = initialState;
   }
 
-  getState(): Readonly<T> {
+  getState = (): Readonly<T> => {
     return this.state;
   }
 
-  getInitialState(): Readonly<T> {
+  getInitialState = (): Readonly<T> => {
     return this.initialState;
   }
 
-  setState(nextState: T | StateUpdater<T>): void {
+  setState = (nextState: T | StateUpdater<T>): void => {
     const prevState = this.state;
     const resolvedState = typeof nextState === "function"
       ? (nextState as StateUpdater<T>)(prevState)
@@ -31,7 +31,7 @@ export class Store<T> {
     this.notify();
   }
 
-  subscribe(listener: Listener): () => void {
+  subscribe = (listener: Listener): (() => void) => {
     this.listeners.add(listener);
 
     return () => {
@@ -39,7 +39,7 @@ export class Store<T> {
     };
   }
 
-  private notify(): void {
+  private notify = (): void => {
     for (const listener of Array.from(this.listeners)) {
       listener();
     }
