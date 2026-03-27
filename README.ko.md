@@ -12,6 +12,7 @@
 - 현재 상태 조회: `getState()`
 - 초기 상태 조회: `getInitialState()`
 - 값 또는 updater 함수로 상태 변경: `setState()`
+- 미들웨어 등록: `setMiddleware()`
 - 구독 / 해제: `subscribe()`
 - 같은 참조로 업데이트하면 notify 생략
 - notify 중 구독 해제가 일어나도 안전하게 순회
@@ -78,7 +79,7 @@ Store 생성 시 전달한 초기 상태를 반환합니다.
 const initialState = store.getInitialState();
 ```
 
-### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+### `store.setState(nextState: SetStateAction<T>): void`
 
 상태를 새 값으로 교체하거나, 이전 상태를 기반으로 다음 상태를 계산합니다.
 
@@ -93,6 +94,20 @@ store.setState((prev) => ({
 `Object.is(prevState, nextState)`가 `true`면 구독자에게 알리지 않습니다.
 
 `setState()`에 전달한 함수는 항상 updater로 해석됩니다. 따라서 현재 API는 **함수 자체를 상태값으로 다루는 패턴**과는 맞지 않습니다.
+
+### `store.setMiddleware(middleware: (nextState: SetStateAction<T>, next: Dispatch<SetStateAction<T>>) => void): void`
+
+스토어에 미들웨어를 추가합니다. 미들웨어는 `setState` 동작을 감싸며 등록된 순서대로 실행됩니다.
+
+```ts
+store.setMiddleware((nextState, next) => {
+  console.log("업데이트 전:", nextState);
+  next(nextState);
+  console.log("업데이트 후");
+});
+```
+
+미들웨어는 `nextState: SetStateAction<T>`와 체인을 이어갈 `next: Dispatch<SetStateAction<T>>` 함수를 인자로 받습니다. 먼저 등록한 미들웨어가 가장 바깥쪽 래퍼가 되므로, `before -> next -> after` 패턴은 실제 상태 반영을 감싸는 중첩 함수 호출처럼 동작합니다. 마지막 `next` 호출이 실제로 상태를 적용하고 구독자에게 알림을 보냅니다.
 
 ### `store.subscribe(listener: () => void): () => void`
 
@@ -139,12 +154,12 @@ store.setState((prev) => {
 - 상태 저장
 - 상태 교체
 - 구독 관리
+- 미들웨어 지원
 
 아직 포함하지 않는 것:
 
 - React hooks
 - selector / equality helpers
-- middleware
 - devtools integration
 - persistence helpers
 

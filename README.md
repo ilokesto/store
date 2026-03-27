@@ -12,6 +12,7 @@ This package serves as a **vanilla store core** for building React state managem
 - Get current state: `getState()`
 - Get initial state: `getInitialState()`
 - Update state with value or updater function: `setState()`
+- Register middleware: `setMiddleware()`
 - Subscribe / Unsubscribe: `subscribe()`
 - Skips notifications when updated with the same reference
 - Safely iterates listeners even if unsubscriptions occur during notification
@@ -78,7 +79,7 @@ Returns the initial state provided when the Store was created.
 const initialState = store.getInitialState();
 ```
 
-### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+### `store.setState(nextState: SetStateAction<T>): void`
 
 Replaces the state with a new value or computes the next state based on the previous one.
 
@@ -93,6 +94,20 @@ store.setState((prev) => ({
 It does not notify subscribers if `Object.is(prevState, nextState)` is `true`.
 
 Functions passed to `setState()` are always treated as updaters. As a result, the current API is not suitable for patterns where the state value itself is a function.
+
+### `store.setMiddleware(middleware: (nextState: SetStateAction<T>, next: Dispatch<SetStateAction<T>>) => void): void`
+
+Adds a middleware to the store. Middlewares wrap the `setState` operation and run in the order they were registered.
+
+```ts
+store.setMiddleware((nextState, next) => {
+  console.log("Before update:", nextState);
+  next(nextState);
+  console.log("After update");
+});
+```
+
+A middleware receives the `nextState: SetStateAction<T>` and a `next: Dispatch<SetStateAction<T>>` function to continue the chain. The first middleware you register becomes the outermost wrapper, so a `before -> next -> after` pattern runs like nested function calls around the final state application. The final `next` call applies the state and notifies subscribers.
 
 ### `store.subscribe(listener: () => void): () => void`
 
@@ -139,12 +154,12 @@ This package currently handles only the following:
 - State storage
 - State replacement
 - Subscription management
+- Middleware support
 
 It does not yet include:
 
 - React hooks
 - Selector / equality helpers
-- Middleware
 - DevTools integration
 - Persistence helpers
 
