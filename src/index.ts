@@ -1,27 +1,59 @@
 type Listener = () => void;
-type StateUpdater<T> = (prevState: Readonly<T>) => T;
+type Dispatch<A> = (value: A) => void;
+type SetStateAction<S> = S | ((prevState: S) => S);
+type Middleware<T> = (
+  nextState: SetStateAction<T>,
+  next: Dispatch<SetStateAction<T>>
+) => void;
 
 export class Store<T> {
   private state: T;
-  private readonly listeners: Set<Listener> = new Set();
+  private readonly listeners = new Set<Listener>();
+  private readonly middlewares = new Set<Middleware<T>>();
 
   constructor(private readonly initialState: T) {
     this.state = initialState;
   }
 
-  getState = (): Readonly<T> => {
+  getState(): Readonly<T> {
     return this.state;
   }
 
-  getInitialState = (): Readonly<T> => {
+  getInitialState(): Readonly<T> {
     return this.initialState;
   }
 
-  setState = (nextState: T | StateUpdater<T>): void => {
+  setState(nextState: SetStateAction<T>): void {
+    const runner = [...this.middlewares].reduceRight<
+      Dispatch<SetStateAction<T>>
+    >(
+      (next, middleware) => {
+        return (state: SetStateAction<T>) => middleware(state, next);
+      },
+      (state: SetStateAction<T>) => this.applyState(state)
+    );
+
+    runner(nextState);
+  }
+
+  setMiddleware(middleware: Middleware<T>): void {
+    this.middlewares.add(middleware);
+  }
+
+  subscribe(listener: Listener): (() => void) {
+    this.listeners.add(listener);
+
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private applyState(nextState: SetStateAction<T>): void {
     const prevState = this.state;
-    const resolvedState = typeof nextState === "function"
-      ? (nextState as StateUpdater<T>)(prevState)
-      : nextState;
+    const resolvedState =
+      typeof nextState === "function"
+        ? (nextState as (prevState: T) => T)(prevState)
+        : nextState;
 
     if (Object.is(prevState, resolvedState)) {
       return;
@@ -31,15 +63,7 @@ export class Store<T> {
     this.notify();
   }
 
-  subscribe = (listener: Listener): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private notify = (): void => {
+  private notify(): void {
     for (const listener of Array.from(this.listeners)) {
       listener();
     }
