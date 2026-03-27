@@ -9,7 +9,7 @@ type Middleware<T> = (
 export class Store<T> {
   private state: T;
   private readonly listeners = new Set<Listener>();
-  private readonly middlewares = new Set<Middleware<T>>();
+  private readonly middlewares: Middleware<T>[] = [];
 
   constructor(private readonly initialState: T) {
     this.state = initialState;
@@ -36,8 +36,12 @@ export class Store<T> {
     runner(nextState);
   }
 
-  setMiddleware(middleware: Middleware<T>): void {
-    this.middlewares.add(middleware);
+  pushMiddleware(middleware: Middleware<T>): void {
+    this.middlewares.push(middleware);
+  }
+
+  unshiftMiddleware(middleware: Middleware<T>): void {
+    this.middlewares.unshift(middleware);
   }
 
   subscribe(listener: Listener): (() => void) {
