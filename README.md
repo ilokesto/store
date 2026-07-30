@@ -14,7 +14,9 @@ This package serves as a **vanilla store core** for building React state managem
 - Update state with value or updater function: `setState()`
 - Register middleware: `pushMiddleware()` / `unshiftMiddleware()`
 - Subscribe / Unsubscribe: `subscribe()`
+- Subscribe to a derived selection: `subscribeSelector(selector, listener, equalityFn?)`
 - Skips notifications when updated with the same reference
+- Skips selector notifications when the selected value is considered equal
 - Safely iterates listeners even if unsubscriptions occur during notification
 
 ## Installation
@@ -132,6 +134,57 @@ const unsubscribe = store.subscribe(() => {
 unsubscribe();
 ```
 
+### `store.subscribeSelector<Selection>(selector, listener, equalityFn?): () => void`
+
+Subscribes to a derived slice of state instead of the whole store. `subscribeSelector` is a distinct method from `subscribe(listener)`; it does not change the signature of `subscribe`, which keeps `override subscribe(...)` working in subclasses. The listener is **not** invoked immediately when you call `subscribeSelector()`. It runs only when the store updates and the selected value changes.
+
+```ts
+type User = { id: string; name: string };
+type UserState = { user: User; revision: number };
+
+const userStore = new Store<UserState>({
+  user: { id: "1", name: "Ada" },
+  revision: 0,
+});
+
+const unsubscribe = userStore.subscribeSelector(
+  (state) => state.user,
+  (nextUser, previousUser) => {
+    console.log("user changed:", previousUser.name, "->", nextUser.name);
+  }
+);
+
+userStore.setState((prev) => ({
+  ...prev,
+  user: { ...prev.user, name: "Grace" },
+  revision: prev.revision + 1,
+}));
+
+unsubscribe();
+```
+
+The listener receives `(nextSelection, previousSelection)`. Use `next` to read the new slice and `previous` to compare against what it was before.
+
+Equality defaults to `Object.is`. Pass a custom `equalityFn(previous, next)` when the selected value is a fresh reference each time but should still be treated as unchanged (for example, a user object with the same `id`):
+
+```ts
+const unsubscribe = userStore.subscribeSelector(
+  (state) => state.user,
+  (nextUser) => {
+    console.log("user identity changed:", nextUser.id);
+  },
+  (previousUser, nextUser) => previousUser.id === nextUser.id
+);
+```
+
+If `Object.is` (or your `equalityFn`) considers the previous and next selections equal, the listener is skipped for that update, even when the underlying state reference changed. This is how you avoid re-rendering on a state change that did not actually affect the slice you care about.
+
+Selector subscriptions are plain listeners under the hood, so they follow the same rules as the single-argument form: they run after the state is stored, they do not run when `setState()` resolves to the same reference, and they are removed by calling the returned unsubscribe function.
+
+The selector runs once during `subscribeSelector()` to seed `previousSelection`. A throw at registration escapes the `subscribeSelector()` call and the listener is never added to the store. Wrap registration-time selector work in a try/catch if the slice may be temporarily invalid.
+
+After every top-level state change that reaches notification, the selector runs again to compute `nextSelection`, then the equality function runs against `previousSelection` and `nextSelection`. The listener runs only when the equality function reports a change; otherwise the notification cycle for this subscription ends there. The store does not catch errors thrown during this cycle: an uncaught throw propagates out of `setState()` and any later listeners (selector or plain) that would have run in the same notification cycle are skipped. Keep the selector, equality function, and listener small, or catch expected errors inside the listener.
+
 ## State Semantics
 
 This Store treats state as **immutable snapshots**.
@@ -165,12 +218,12 @@ This package currently handles only the following:
 - State storage
 - State replacement
 - Subscription management
+- Selector-based subscriptions with optional equality function
 - Middleware support
 
 It does not yet include:
 
 - React hooks
-- Selector / equality helpers
 - DevTools integration
 - Persistence helpers
 
