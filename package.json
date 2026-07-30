@@ -1,6 +1,6 @@
 {
   "name": "@ilokesto/store",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "scripts": {
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.typecheck.json",
