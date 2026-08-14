@@ -5,17 +5,14 @@
     "build": "rm -rf dist && tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "changeset publish"
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ilokesto/store"
+    "url": "git+https://github.com/ilokesto/metarepo.git",
+    "directory": "packages/store"
   },
   "homepage": "https://ilokesto.ayden94.com/ko/store",
-  "packageManager": "pnpm@10.17.1",
   "type": "module",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -37,7 +34,6 @@
   "author": "Jeong Jinho <wpfekdml@me.com>",
   "license": "MIT",
   "devDependencies": {
-    "@changesets/cli": "^2.28.0",
     "@types/node": "^26.1.1",
     "typescript": "^6.0.2",
     "vitest": "^4.1.10"
