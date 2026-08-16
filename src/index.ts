@@ -1,6 +1,15 @@
 type Listener = () => void;
 type Dispatch<A> = (value: A) => void;
 type SetStateAction<S> = S | ((prevState: S) => S);
+type Selector<T, Selection> = (state: Readonly<T>) => Selection;
+type SelectorListener<Selection> = (
+  nextSelection: Selection,
+  previousSelection: Selection
+) => void;
+type EqualityFn<Selection> = (
+  previousSelection: Selection,
+  nextSelection: Selection
+) => boolean;
 type Middleware<T> = (
   nextState: SetStateAction<T>,
   next: Dispatch<SetStateAction<T>>
@@ -38,11 +47,36 @@ export class Store<T> {
     this.cachedRunner = null;
   }
 
-  subscribe(listener: Listener): (() => void) {
+  subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
 
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  subscribeSelector<Selection>(
+    selector: Selector<T, Selection>,
+    listener: SelectorListener<Selection>,
+    equalityFn: EqualityFn<Selection> = Object.is
+  ): () => void {
+    let previousSelection = selector(this.state);
+    const selectorListener = () => {
+      const nextSelection = selector(this.state);
+
+      if (equalityFn(previousSelection, nextSelection)) {
+        return;
+      }
+
+      const currentPreviousSelection = previousSelection;
+      previousSelection = nextSelection;
+      listener(nextSelection, currentPreviousSelection);
+    };
+
+    this.listeners.add(selectorListener);
+
+    return () => {
+      this.listeners.delete(selectorListener);
     };
   }
 
