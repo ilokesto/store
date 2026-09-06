@@ -6,6 +6,13 @@ A small and simple TypeScript Store class.
 
 This package serves as a **vanilla store core** for building React state management libraries. It provides state storage, updates, and subscription features without any React dependencies.
 
+
+## Next major foundation
+
+Use `createStore(value)`, `store.set(value)`, and `store.update(updater)`. Exported `ReadableStore<T>` and `StoreApi<T>` describe structural integrations without private class fields. The Store class and its prototype methods remain available.
+
+Notifications now use synchronous FIFO commit snapshots. Unsubscribe cancels pending delivery immediately, duplicate callback registrations are independent, and listener failures are collected into an `AggregateError` after draining. Read the [notification contract](docs/advanced/notification-semantics.mdx) before adopting the major version.
+
 ## Features
 
 - Generic-based `Store<T>`
@@ -183,7 +190,7 @@ Selector subscriptions are plain listeners under the hood, so they follow the sa
 
 The selector runs once during `subscribeSelector()` to seed `previousSelection`. A throw at registration escapes the `subscribeSelector()` call and the listener is never added to the store. Wrap registration-time selector work in a try/catch if the slice may be temporarily invalid.
 
-After every top-level state change that reaches notification, the selector runs again to compute `nextSelection`, then the equality function runs against `previousSelection` and `nextSelection`. The listener runs only when the equality function reports a change; otherwise the notification cycle for this subscription ends there. The store does not catch errors thrown during this cycle: an uncaught throw propagates out of `setState()` and any later listeners (selector or plain) that would have run in the same notification cycle are skipped. Keep the selector, equality function, and listener small, or catch expected errors inside the listener.
+After every top-level state change that reaches notification, the selector runs again to compute `nextSelection`, then the equality function runs against `previousSelection` and `nextSelection`. The listener runs only when the equality function reports a change; otherwise the notification cycle for this subscription ends there. The store collects errors during delivery, finishes other active subscriptions and queued notifications, then throws an `AggregateError` containing the original failures. Keep the selector, equality function, and listener small, or catch expected errors inside the listener.
 
 ## State Semantics
 

@@ -5,7 +5,7 @@ description: "값 또는 updater 함수로 상태를 교체하고 알림 동작�
 
 # setState
 
-`setState()`는 저장된 값을 바꾸는 유일한 메서드입니다.
+`setState()`는 값 또는 updater를 받습니다. 명시적인 교체에는 `set(value)`, 계산에는 `update(fn)`를 사용할 수 있으며 세 메서드는 같은 미들웨어 경로를 사용합니다.
 
 ```ts
 setState(nextState: T | ((prevState: T) => T)): void
@@ -79,4 +79,4 @@ store.setState((prev) => {
 
 ## Error 처리
 
-`setState()`는 미들웨어, updater 함수, 리스너에서 던진 error를 잡지 않습니다. 실패를 잡아야 하는지는 `setState()`를 호출하는 쪽에서 결정하세요.
+미들웨어와 updater 오류는 직접 전파됩니다. 알림 오류는 나머지 리스너와 대기 중인 알림을 처리한 뒤 `AggregateError`로 전달됩니다. 이미 저장된 상태는 되돌리지 않습니다.

@@ -6,6 +6,13 @@
 
 현재 패키지는 React 전역 상태 관리 라이브러리를 만들기 위한 **vanilla store core**에 가깝습니다. React 의존성 없이 상태 저장, 업데이트, 구독 기능만 제공합니다.
 
+
+## 다음 메이저의 상태 기반
+
+`createStore(value)`, `store.set(value)`, `store.update(updater)`를 사용할 수 있습니다. 공개 `ReadableStore<T>`와 `StoreApi<T>`는 클래스의 비공개 필드에 의존하지 않는 구조적 연동 계약입니다. Store 클래스와 프로토타입 메서드는 유지합니다.
+
+알림은 저장 시점의 스냅샷을 동기 FIFO로 전달합니다. 해제는 대기 중인 알림에도 즉시 적용하고, 같은 콜백 등록도 독립적으로 관리하며, 리스너 오류는 전달을 마친 뒤 `AggregateError`로 전달합니다. 메이저 버전 채택 전에 [알림 계약](docs/advanced/notification-semantics.ko.mdx)을 확인하세요.
+
 ## Features
 
 - 제네릭 기반 `Store<T>`
@@ -183,7 +190,7 @@ selector 구독도 내부적으로는 일반 listener와 동일하게 동작하�
 
 selector는 `subscribeSelector()`가 처음 호출될 때 한 번 실행되어 이전 `previousSelection`을 시드합니다. 등록 시점에 throw가 발생하면 그 error는 `subscribeSelector()` 호출 밖으로 전파되고 listener는 store에 등록되지 않습니다. 등록 시점에 selection이 일시적으로 잘못될 수 있다면 try/catch로 감싸세요.
 
-이후 top-level 상태 변경이 알림 단계에 도달할 때마다 selector가 다시 실행되어 `nextSelection`을 계산하고, 그 다음 equality 함수가 `previousSelection`과 `nextSelection`을 비교합니다. listener는 equality 함수가 변경을 보고했을 때만 실행되고, 그렇지 않으면 이 구독에 대한 알림 cycle은 여기서 끝납니다. store는 이 cycle 안에서 던지는 error를 잡지 않습니다. 잡히지 않은 throw는 `setState()` 호출 밖으로 그대로 전파되고, 같은 알림 cycle에서 실행될 예정이던 뒤쪽 listener(selector, 일반 모두)는 건너뜁니다. selector, equality 함수, listener는 작게 유지하거나 예상 가능한 error는 listener 안에서 잡으세요.
+이후 top-level 상태 변경이 알림 단계에 도달할 때마다 selector가 다시 실행되어 `nextSelection`을 계산하고, 그 다음 equality 함수가 `previousSelection`과 `nextSelection`을 비교합니다. listener는 equality 함수가 변경을 보고했을 때만 실행되고, 그렇지 않으면 이 구독에 대한 알림 cycle은 여기서 끝납니다. store는 알림 오류를 모으고 나머지 활성 구독과 대기 중인 알림을 처리한 뒤 원래 오류를 담은 `AggregateError`를 던집니다. selector, equality 함수, listener는 작게 유지하거나 예상 가능한 error는 listener 안에서 잡으세요.
 
 ## State Semantics
 

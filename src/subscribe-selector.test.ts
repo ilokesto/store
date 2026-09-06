@@ -114,7 +114,8 @@ describe("Store", () => {
       store.setState({ count: 1 });
 
       // Then
-      expect(secondListener).toHaveBeenCalledTimes(1);
+      // The next major contract makes unsubscribe effective before delivery.
+      expect(secondListener).not.toHaveBeenCalled();
       expect(thirdListener).not.toHaveBeenCalled();
     });
   });

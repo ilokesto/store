@@ -5,7 +5,7 @@ description: "Replace state with a value or updater function and understand noti
 
 # setState
 
-`setState()` is the only method that changes the stored value.
+`setState()` accepts a value or updater. Prefer explicit `set(value)` for replacement and `update(fn)` for computation; all three use the same middleware chain.
 
 ```ts
 setState(nextState: T | ((prevState: T) => T)): void
@@ -79,4 +79,4 @@ This mutation is worse than a no-op: the object was changed, but subscribers wer
 
 ## Errors
 
-`setState()` does not catch errors thrown by middleware, updater functions, or listeners. Let the caller decide whether to catch failures around the `setState()` call.
+Middleware and updater errors propagate directly. Notification errors are collected while remaining listeners and queued commits are delivered, then reported as an `AggregateError`. Already committed state is not rolled back.

@@ -1,56 +1,30 @@
 ---
 title: "Notification semantics"
-description: "Exact change detection, listener iteration, and middleware effects."
+description: "Synchronous commits, FIFO snapshot delivery, and subscription ownership."
 ---
 
 # Notification semantics
 
-This page describes the precise notification behavior implied by `store/src/index.ts`.
+## Commits and delivery
 
-## Update pipeline
+Updates run through the current middleware chain. A value different by `Object.is` is committed immediately. The store captures that value and current subscriptions in a notification record, then drains records synchronously in FIFO order. No timers, microtasks, or batching are involved.
 
-When you call `setState(nextState)`, the store builds a dispatch chain from the current middleware list. The list is copied with `[...this.middlewares]` for that call, then reduced with `reduceRight` so array order defines outer-to-inner middleware order.
+An unchanged reference, a same-value updater, or middleware that does not call `next` produces no notification. Middleware runs in outer-to-inner order; ordinary delivery remains inside `next`, before middleware code following it.
 
-The final dispatch calls `applyState()`.
+## Reentrant writes
 
-## State resolution
+If a listener commits 2 while delivering 1, remaining selectors receive 1 before receiving 2. Selectors evaluate the captured state and receive next/previous selection arguments. `getState()` always reads the latest committed state, even while an older record is being delivered. Plain `subscribe` callbacks receive no arguments and are invalidation signals.
 
-`applyState()` stores `prevState`, resolves a function updater with `prevState`, or uses the provided value as-is.
+New subscriptions do not receive records captured before registration. Unsubscribe is immediate and idempotent: an inactive subscription is skipped even if present in a captured record. Registering the same callback twice creates independent subscriptions.
 
-```ts
-const resolvedState =
-  typeof nextState === "function"
-    ? nextState(prevState)
-    : nextState;
-```
+FIFO delivery avoids recursive stack growth; it does not prevent logically infinite update loops. Listener-driven updates still need a terminating condition.
 
-Then it compares `prevState` and `resolvedState` with `Object.is`.
+## Errors
 
-## No-notify cases
+A selector error during registration propagates immediately and registers nothing. Errors from a selector, equality function, or listener during delivery are collected. Other active subscriptions and queued records still run. After draining, the outermost notification call throws an `AggregateError` containing original thrown values in order. The queue is cleared and remains usable for the next update.
 
-The store does not notify when:
+The state is already committed and is not rolled back. A failed selector/equality evaluation retains its previous selection baseline; a listener failure occurs after that baseline advances. Updater and middleware errors outside notification delivery propagate directly.
 
-- the updater returns the previous value,
-- an object or array is mutated in place and the same reference is returned,
-- a middleware blocks the update by not calling `next()`,
-- a middleware transforms the update into the previous value.
+## Explicit writes
 
-For primitives, `Object.is` follows JavaScript semantics: `Object.is(NaN, NaN)` is true, and `Object.is(0, -0)` is false.
-
-## Listener iteration
-
-When notification happens, the store iterates over `Array.from(this.listeners)`. This makes a snapshot of the listeners for that notification pass.
-
-Consequences:
-
-- a listener added during notification waits until a later update,
-- a listener removed during notification may still run in the current pass if it was already in the snapshot,
-- listener order follows `Set` insertion order for the snapshot.
-
-## Reentrant updates
-
-A listener can call `setState()` again because the implementation does not block reentrancy. This can be useful for derived state but can also create loops. Add explicit guards if you intentionally update from a listener.
-
-## Error propagation
-
-Middleware, updater functions, and listeners run synchronously and errors are not caught by the store. A thrown error leaves responsibility with the caller and can stop the current pipeline.
+`set(value)` treats functions as values; `update(updater)` treats its argument as computation. Both use the same middleware chain as `setState(valueOrUpdater)`.

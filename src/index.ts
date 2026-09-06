@@ -1,23 +1,55 @@
-type Listener = () => void;
-type Dispatch<A> = (value: A) => void;
-type SetStateAction<S> = S | ((prevState: S) => S);
-type Selector<T, Selection> = (state: Readonly<T>) => Selection;
-type SelectorListener<Selection> = (
+export type Listener = () => void;
+export type Unsubscribe = () => void;
+export type Dispatch<A> = (value: A) => void;
+export type SetStateAction<S> = S | ((prevState: S) => S);
+export type Selector<T, Selection> = (state: Readonly<T>) => Selection;
+export type SelectorListener<Selection> = (
   nextSelection: Selection,
   previousSelection: Selection
 ) => void;
-type EqualityFn<Selection> = (
+export type EqualityFn<Selection> = (
   previousSelection: Selection,
   nextSelection: Selection
 ) => boolean;
-type Middleware<T> = (
+export type Middleware<T> = (
   nextState: SetStateAction<T>,
   next: Dispatch<SetStateAction<T>>
 ) => void;
 
-export class Store<T> {
+export interface ReadableStore<T> {
+  getState(): Readonly<T>;
+  getInitialState(): Readonly<T>;
+  subscribe(listener: Listener): Unsubscribe;
+  subscribeSelector<Selection>(
+    selector: Selector<T, Selection>,
+    listener: SelectorListener<Selection>,
+    equalityFn?: EqualityFn<Selection>
+  ): Unsubscribe;
+}
+
+export interface StoreApi<T> extends ReadableStore<T> {
+  setState(nextState: SetStateAction<T>): void;
+  set(value: T): void;
+  update(updater: (previousState: T) => T): void;
+  pushMiddleware(middleware: Middleware<T>): void;
+  unshiftMiddleware(middleware: Middleware<T>): void;
+}
+
+type Subscription<T> = {
+  active: boolean;
+  readonly notify: (state: Readonly<T>) => void;
+};
+
+type Notification<T> = {
+  readonly state: T;
+  readonly subscriptions: readonly Subscription<T>[];
+};
+
+export class Store<T> implements StoreApi<T> {
   private state: T;
-  private readonly listeners = new Set<Listener>();
+  private readonly subscriptions = new Set<Subscription<T>>();
+  private readonly notifications: Notification<T>[] = [];
+  private notifying = false;
   private readonly middlewares: Middleware<T>[] = [];
   private cachedRunner: Dispatch<SetStateAction<T>> | null = null;
 
@@ -37,6 +69,16 @@ export class Store<T> {
     this.getRunner()(nextState);
   }
 
+  /** Replace the value, without interpreting callable state as an updater. */
+  set(value: T): void {
+    this.setState(() => value);
+  }
+
+  /** Compute a replacement through the same middleware pipeline as setState. */
+  update(updater: (previousState: T) => T): void {
+    this.setState(updater);
+  }
+
   pushMiddleware(middleware: Middleware<T>): void {
     this.middlewares.push(middleware);
     this.cachedRunner = null;
@@ -48,11 +90,7 @@ export class Store<T> {
   }
 
   subscribe(listener: Listener): () => void {
-    this.listeners.add(listener);
-
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return this.addSubscription(() => listener());
   }
 
   subscribeSelector<Selection>(
@@ -61,8 +99,8 @@ export class Store<T> {
     equalityFn: EqualityFn<Selection> = Object.is
   ): () => void {
     let previousSelection = selector(this.state);
-    const selectorListener = () => {
-      const nextSelection = selector(this.state);
+    const selectorListener = (state: Readonly<T>) => {
+      const nextSelection = selector(state);
 
       if (equalityFn(previousSelection, nextSelection)) {
         return;
@@ -73,10 +111,15 @@ export class Store<T> {
       listener(nextSelection, currentPreviousSelection);
     };
 
-    this.listeners.add(selectorListener);
+    return this.addSubscription(selectorListener);
+  }
 
+  private addSubscription(notify: (state: Readonly<T>) => void): Unsubscribe {
+    const subscription: Subscription<T> = { active: true, notify };
+    this.subscriptions.add(subscription);
     return () => {
-      this.listeners.delete(selectorListener);
+      subscription.active = false;
+      this.subscriptions.delete(subscription);
     };
   }
 
@@ -114,12 +157,42 @@ export class Store<T> {
     }
 
     this.state = resolvedState;
-    this.notify();
+    this.notifications.push({
+      state: resolvedState,
+      subscriptions: [...this.subscriptions],
+    });
+    this.flushNotifications();
   }
 
-  private notify(): void {
-    for (const listener of Array.from(this.listeners)) {
-      listener();
+  private flushNotifications(): void {
+    if (this.notifying) return;
+
+    this.notifying = true;
+    const errors: unknown[] = [];
+    try {
+      // Reentrant commits append to this queue; they never recurse into delivery.
+      for (const notification of this.notifications) {
+        for (const subscription of notification.subscriptions) {
+          if (!subscription.active) continue;
+          try {
+            subscription.notify(notification.state);
+          } catch (error) {
+            // Preserve arbitrary thrown values and report them after all delivery.
+            errors.push(error);
+          }
+        }
+      }
+    } finally {
+      this.notifications.length = 0;
+      this.notifying = false;
+    }
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "Store notification failed");
     }
   }
+}
+
+/** Create a fresh store; the argument is always the initial value. */
+export function createStore<T>(initialState: T): Store<T> {
+  return new Store(initialState);
 }

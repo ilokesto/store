@@ -120,9 +120,12 @@ After every top-level state change that reaches notification, the selector runs 
 
 ## Listener errors
 
-The store does not catch listener errors. Two distinct call sites can throw:
+Registration errors and notification errors have different boundaries:
 
 - **Registration (`subscribeSelector()` call).** Only the selector runs (to seed `previousSelection`). A throw escapes the `subscribeSelector()` call itself. The listener is never added to the store, so a later `setState()` does not see it.
-- **Notification (a later `setState()` call).** The selector runs, then the equality function runs, then the listener runs only when the equality function reports a change. All three run synchronously inside the notification cycle. An uncaught throw propagates out of `setState()` and any later listeners (selector or plain) that would have run in the same notification cycle are skipped.
+- **Notification (a later `setState()` call).** The selector runs, then the equality function runs, then the listener runs only when the equality function reports a change. All three run synchronously inside the notification cycle. Failures are collected without skipping other active listeners or queued commits, then the outermost delivery throws an `AggregateError` containing the original failures.
 
 Keep the selector, equality function, and listener small, or catch expected errors inside the listener.
+## Subscription ownership in the next major
+
+Registering the same callback twice creates independent subscriptions. Unsubscribe immediately cancels pending delivery for that registration. Reentrant updates commit immediately but notifications drain in FIFO order. Selectors receive each committed snapshot; `getState()` always returns the latest value.

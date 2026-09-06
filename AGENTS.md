@@ -10,7 +10,7 @@ A small, atomic, framework-agnostic state container with selector-driven subscri
 
 1. Read the root `AGENTS.md`, `PACKAGES.md`, and `ARCHITECTURE.md`.
 2. Load the `ilokesto-store` skill from `.opencode/skills/ilokesto-store/SKILL.md`.
-3. Keep the public API minimal and backward-compatible.
+3. Keep the public API minimal. Major contract changes are recorded in `DECISIONS/005-state-foundation.md` and require a Changeset; do not apply versions or publish during implementation.
 4. Add tests in `src/index.test.ts` for new behavior.
 5. Run `pnpm typecheck`, `pnpm test`, and `pnpm build` before committing.
 6. Add a changeset with `pnpm changeset` for any consumer-facing change.
