@@ -7,11 +7,17 @@ A small and simple TypeScript Store class.
 This package serves as a **vanilla store core** for building React state management libraries. It provides state storage, updates, and subscription features without any React dependencies.
 
 
-## Next major foundation
+## Documentation
 
-Use `createStore(value)`, `store.set(value)`, and `store.update(updater)`. Exported `ReadableStore<T>` and `StoreApi<T>` describe structural integrations without private class fields. The Store class and its prototype methods remain available.
+- Full docs: [English](https://ilokesto.ayden94.com/en/store) · [한국어](https://ilokesto.ayden94.com/ko/store)
+- Source: [packages/store](https://github.com/ilokesto/ilokesto/tree/main/packages/store)
+- npm: [@ilokesto/store](https://www.npmjs.com/package/@ilokesto/store)
 
-Notifications now use synchronous FIFO commit snapshots. Unsubscribe cancels pending delivery immediately, duplicate callback registrations are independent, and listener failures are collected into an `AggregateError` after draining. Read the [notification contract](docs/advanced/notification-semantics.mdx) before adopting the major version.
+## Foundation
+
+Use `createStore(value)`, `store.set(value)`, and `store.update(updater)`. Exported `ReadableStore<T>` and `StoreApi<T>` describe structural integrations without private class fields. The `Store` class and its prototype methods remain available.
+
+Notifications use synchronous FIFO commit snapshots. Unsubscribe cancels pending delivery immediately, duplicate callback registrations are independent, and listener failures are collected into an `AggregateError` after draining. Read the [notification contract](docs/advanced/notification-semantics.mdx) for the full semantics.
 
 ## Features
 

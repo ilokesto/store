@@ -7,11 +7,17 @@
 현재 패키지는 React 전역 상태 관리 라이브러리를 만들기 위한 **vanilla store core**에 가깝습니다. React 의존성 없이 상태 저장, 업데이트, 구독 기능만 제공합니다.
 
 
-## 다음 메이저의 상태 기반
+## 문서
 
-`createStore(value)`, `store.set(value)`, `store.update(updater)`를 사용할 수 있습니다. 공개 `ReadableStore<T>`와 `StoreApi<T>`는 클래스의 비공개 필드에 의존하지 않는 구조적 연동 계약입니다. Store 클래스와 프로토타입 메서드는 유지합니다.
+- 전체 문서: [English](https://ilokesto.ayden94.com/en/store) · [한국어](https://ilokesto.ayden94.com/ko/store)
+- 소스: [packages/store](https://github.com/ilokesto/ilokesto/tree/main/packages/store)
+- npm: [@ilokesto/store](https://www.npmjs.com/package/@ilokesto/store)
 
-알림은 저장 시점의 스냅샷을 동기 FIFO로 전달합니다. 해제는 대기 중인 알림에도 즉시 적용하고, 같은 콜백 등록도 독립적으로 관리하며, 리스너 오류는 전달을 마친 뒤 `AggregateError`로 전달합니다. 메이저 버전 채택 전에 [알림 계약](docs/advanced/notification-semantics.ko.mdx)을 확인하세요.
+## 기반 구조
+
+`createStore(value)`, `store.set(value)`, `store.update(updater)`를 사용할 수 있습니다. 공개 `ReadableStore<T>`와 `StoreApi<T>`는 클래스의 비공개 필드에 의존하지 않는 구조적 연동 계약입니다. `Store` 클래스와 프로토타입 메서드는 유지합니다.
+
+알림은 저장 시점의 스냅샷을 동기 FIFO로 전달합니다. 해제는 대기 중인 알림에도 즉시 적용하고, 같은 콜백 등록도 독립적으로 관리하며, 리스너 오류는 전달을 마친 뒤 `AggregateError`로 전달합니다. 전체 의미론은 [알림 계약](docs/advanced/notification-semantics.ko.mdx)을 확인하세요.
 
 ## Features
 
