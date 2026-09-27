@@ -34,20 +34,20 @@ unsubscribe();
 
 `setState()` replaces the stored value. If the resolved next value is `Object.is`-equal to the previous value, the store keeps the old value and does not notify listeners.
 
-## When to use it
+## Choose Store or State
 
-Choose `@ilokesto/store` for small shared state, domain state outside a component tree, framework adapter internals, or simple event-driven modules where a full state library would be more structure than you need.
+Choose `@ilokesto/store` when plain TypeScript code should own a small value and you want to control reads, writes, and subscription cleanup directly. It is a good fit for domain state outside a component tree, framework adapter internals, and simple event-driven modules.
 
-Avoid it when you need reducers, devtools, persistence, async caching, normalized entities, or distributed synchronization. Those concerns can be built around the store, but they are not part of this package.
+Choose [`@ilokesto/state`](/en/state) when UI components need supported React, Vue, Svelte, Solid, or Angular bindings, or when you need reducers, persistence, validation, DevTools, history, or timed middleware. It builds those higher-level features on this package. Neither package provides async server caching, normalized entities, or distributed synchronization.
 
 ## Documentation map
 
-- [Quick start](./quick-start): build and clean up a small cart store.
-- [Core concepts](./core-concepts): replacement updates, subscribers, and middleware at a glance.
-- [Store reference](./reference/store): constructor, `getState()`, and `getInitialState()`.
-- [setState reference](./reference/set-state): value updates, updater functions, and no-notify cases.
-- [subscribe reference](./reference/subscribe): listener lifecycle and cleanup.
-- [middleware reference](./reference/middleware): `pushMiddleware()` and `unshiftMiddleware()` ordering.
-- [Troubleshooting](./troubleshooting): common mistakes before using the package in real work.
+- **Start:** [Quick start](/en/store/quick-start) builds and runs a small cart store; [Core concepts](/en/store/core-concepts) explains replacement updates and explicit subscriptions.
+- **Apply it:** [Small state](/en/store/guides/small-state), [Subscription lifecycle](/en/store/guides/subscription-lifecycle), and [Composing middleware](/en/store/guides/composing-middleware) cover common tasks.
+- **Look up behavior:** [Store and contracts](/en/store/reference/store), [setState](/en/store/reference/set-state), [subscribe](/en/store/reference/subscribe), and [middleware](/en/store/reference/middleware) document the exact API.
+- **Connect a framework yourself:** the Integration pages show minimal React, Vue, Svelte, Solid, and Angular adapters. Prefer [`@ilokesto/state`](/en/state) when you want maintained adapters instead.
+- **Diagnose edge cases:** [Notification semantics](/en/store/advanced/notification-semantics) covers ordering and failures; [Troubleshooting](/en/store/troubleshooting) covers common mistakes.
 
-> This documentation lives in the `@ilokesto/store` repository and is synced to the ilokesto docs site.
+## Version and source basis
+
+The installable package manifest is `@ilokesto/store@1.1.2`. The introductory example and quick start use its established `Store`, `getState`, `setState`, and `subscribe` surface. This documentation was audited against the workspace source at commit `bb26d48`; pages that describe the pending foundation major (including `createStore`, structural store contracts, explicit `set`/`update`, FIFO delivery, selector subscriptions, and aggregated listener errors) document workspace behavior that is recorded in Changesets but not yet versioned for npm.

@@ -24,7 +24,8 @@ const authStore = new Store({ userId: null as string | null });
 ## 업데이트는 병합이 아니라 교체입니다
 
 ```ts lineNumbers
-const profileStore = new Store({ name: "Ada", theme: "dark" });
+type ProfileState = { name: string; theme?: string };
+const profileStore = new Store<ProfileState>({ name: "Ada", theme: "dark" });
 
 profileStore.setState({ name: "Ada" });
 // 다음 상태는 { name: "Ada" }입니다. 기존 theme 필드는 사라집니다.

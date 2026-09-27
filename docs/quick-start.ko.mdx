@@ -9,6 +9,15 @@ description: "작은 장바구니 store를 만들고, 변경을 구독하고, �
 
 ## 1. 타입이 있는 store 만들기
 
+TypeScript 프로젝트에 패키지를 설치하세요.
+
+```package-install
+@ilokesto/store
+```
+
+아래 코드 블록을 순서대로 하나의 TypeScript 파일에 넣으세요.
+같은 `cartStore` 인스턴스를 사용하며, 모두 합치면 실행 가능한 예제가 됩니다.
+
 ```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
@@ -43,7 +52,7 @@ console.log(cart.items);
 ```ts lineNumbers
 const unsubscribe = cartStore.subscribe(() => {
   const nextCart = cartStore.getState();
-  console.table(nextCart.items);
+  console.log(nextCart.items.map((item) => `${item.title}: ${item.quantity}`).join(", ") || "empty");
 });
 ```
 
@@ -83,8 +92,11 @@ clearCart();
 unsubscribe();
 ```
 
-`unsubscribe()`가 실행된 뒤에는 이후 `setState()` 호출이 그 리스너를 실행하지 않습니다.
+TypeScript runner로 이 파일을 실행하거나 애플리케이션에 포함하세요. 리스너는 `Keyboard: 1`, `Keyboard: 2`, `empty`를 차례로 출력합니다. `unsubscribe()`가 실행된 뒤에는 이후 `setState()` 호출이 그 리스너를 실행하지 않습니다.
 
 ## 다음 단계
 
-동작 계약은 [핵심 개념](./core-concepts)을 읽고, 정확한 API 세부사항이 필요하면 [레퍼런스 페이지](./reference/store)를 사용하세요.
+- 교체와 동등성 규칙은 [핵심 개념](/ko/store/core-concepts)을 읽으세요.
+- 정확한 계약은 [Store 레퍼런스](/ko/store/reference/store), [`setState` 레퍼런스](/ko/store/reference/set-state), [`subscribe` 레퍼런스](/ko/store/reference/subscribe)를 확인하세요.
+- 오래 유지되는 리스너를 붙이기 전에 [구독 생명주기](/ko/store/guides/subscription-lifecycle)를 읽으세요.
+- React, Vue, Svelte, Solid, Angular 컴포넌트가 이 상태로 다시 렌더링되어야 한다면 프레임워크 어댑터를 직접 관리하는 대신 [`@ilokesto/state`](/ko/state)로 이어가세요.

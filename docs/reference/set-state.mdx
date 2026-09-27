@@ -5,7 +5,7 @@ description: "Replace state with a value or updater function and understand noti
 
 # setState
 
-`setState()` accepts a value or updater. Prefer explicit `set(value)` for replacement and `update(fn)` for computation; all three use the same middleware chain.
+`setState()` accepts a value or updater. In the pending workspace release, `set(value)` makes replacement explicit and `update(fn)` makes computation explicit; all three use the same middleware chain. `set` and `update` are not part of the currently versioned `@ilokesto/store@1.1.2`.
 
 ```ts
 setState(nextState: T | ((prevState: T) => T)): void
@@ -48,7 +48,8 @@ The implementation resolves state in this order:
 ## Replace, not merge
 
 ```ts lineNumbers
-const store = new Store({ a: 1, b: 2 });
+type LooseState = { a: number; b?: number };
+const store = new Store<LooseState>({ a: 1, b: 2 });
 
 store.setState({ a: 2 });
 console.log(store.getState()); // { a: 2 }

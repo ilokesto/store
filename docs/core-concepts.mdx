@@ -24,7 +24,8 @@ The type parameter describes the entire stored value. You can store primitives, 
 ## Updates replace, not merge
 
 ```ts lineNumbers
-const profileStore = new Store({ name: "Ada", theme: "dark" });
+type ProfileState = { name: string; theme?: string };
+const profileStore = new Store<ProfileState>({ name: "Ada", theme: "dark" });
 
 profileStore.setState({ name: "Ada" });
 // The next state is { name: "Ada" }. The old theme field is gone.

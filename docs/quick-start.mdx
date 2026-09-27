@@ -9,6 +9,15 @@ This guide builds a tiny cart store with plain TypeScript. The important loop is
 
 ## 1. Create a typed store
 
+Install the package in your TypeScript project:
+
+```package-install
+@ilokesto/store
+```
+
+Put the following snippets in order in one TypeScript file. They share the
+`cartStore` instance and together form a complete example.
+
 ```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
@@ -43,7 +52,7 @@ console.log(cart.items);
 ```ts lineNumbers
 const unsubscribe = cartStore.subscribe(() => {
   const nextCart = cartStore.getState();
-  console.table(nextCart.items);
+  console.log(nextCart.items.map((item) => `${item.title}: ${item.quantity}`).join(", ") || "empty");
 });
 ```
 
@@ -83,8 +92,11 @@ clearCart();
 unsubscribe();
 ```
 
-After `unsubscribe()` runs, later `setState()` calls no longer trigger that listener.
+Run the file with your TypeScript runner or include it in an application. The listener prints `Keyboard: 1`, then `Keyboard: 2`, then `empty`. After `unsubscribe()` runs, later `setState()` calls no longer trigger that listener.
 
 ## Next steps
 
-Read [Core concepts](./core-concepts) for the behavioral contract, then use the [reference pages](./reference/store) when you need exact API details.
+- Read [Core concepts](/en/store/core-concepts) for replacement and equality rules.
+- Use the [Store reference](/en/store/reference/store), [`setState` reference](/en/store/reference/set-state), and [`subscribe` reference](/en/store/reference/subscribe) for exact contracts.
+- Follow [Subscription lifecycle](/en/store/guides/subscription-lifecycle) before attaching a long-lived listener.
+- If a React, Vue, Svelte, Solid, or Angular component should rerender from this state, continue with [`@ilokesto/state`](/en/state) instead of maintaining a framework adapter yourself.

@@ -5,6 +5,8 @@ description: "Synchronous commits, FIFO snapshot delivery, and subscription owne
 
 # Notification semantics
 
+> This page documents the pending foundation-major workspace source, not the notification behavior of the currently versioned `@ilokesto/store@1.1.2`. Review it before adopting that release.
+
 ## Commits and delivery
 
 Updates run through the current middleware chain. A value different by `Object.is` is committed immediately. The store captures that value and current subscriptions in a notification record, then drains records synchronously in FIFO order. No timers, microtasks, or batching are involved.

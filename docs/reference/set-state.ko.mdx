@@ -5,7 +5,7 @@ description: "값 또는 updater 함수로 상태를 교체하고 알림 동작�
 
 # setState
 
-`setState()`는 값 또는 updater를 받습니다. 명시적인 교체에는 `set(value)`, 계산에는 `update(fn)`를 사용할 수 있으며 세 메서드는 같은 미들웨어 경로를 사용합니다.
+`setState()`는 값 또는 updater를 받습니다. 다음 workspace release에서는 명시적인 교체에 `set(value)`, 계산에 `update(fn)`를 사용할 수 있고 세 메서드는 같은 middleware 경로를 사용합니다. `set`과 `update`는 현재 버전이 적용된 `@ilokesto/store@1.1.2`에는 없습니다.
 
 ```ts
 setState(nextState: T | ((prevState: T) => T)): void
@@ -48,7 +48,8 @@ statusStore.setState((prev) => ({
 ## 병합이 아니라 교체
 
 ```ts lineNumbers
-const store = new Store({ a: 1, b: 2 });
+type LooseState = { a: number; b?: number };
+const store = new Store<LooseState>({ a: 1, b: 2 });
 
 store.setState({ a: 2 });
 console.log(store.getState()); // { a: 2 }
