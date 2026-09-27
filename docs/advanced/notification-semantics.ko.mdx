@@ -5,8 +5,6 @@ description: "동기 상태 저장, FIFO 스냅샷 전달, 구독 소유권을 �
 
 # 알림 동작
 
-> 이 페이지는 현재 버전이 적용된 `@ilokesto/store@1.1.2`가 아니라 다음 foundation major용 workspace source의 알림 동작을 설명합니다. 해당 release를 채택하기 전에 확인하세요.
-
 ## 상태 저장과 전달
 
 업데이트는 현재 미들웨어 경로를 거칩니다. `Object.is`로 다른 값이면 즉시 저장하고, 그 값과 당시 구독 목록을 알림 기록으로 보관합니다. 알림은 동기 FIFO 순서로 처리하며 timer, microtask, batching을 사용하지 않습니다.

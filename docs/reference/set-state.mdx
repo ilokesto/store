@@ -5,7 +5,7 @@ description: "Replace state with a value or updater function and understand noti
 
 # setState
 
-`setState()` accepts a value or updater. In the pending workspace release, `set(value)` makes replacement explicit and `update(fn)` makes computation explicit; all three use the same middleware chain. `set` and `update` are not part of the currently versioned `@ilokesto/store@1.1.2`.
+`setState()` accepts a value or updater. `set(value)` makes replacement explicit and `update(fn)` makes computation explicit; all three use the same middleware chain.
 
 ```ts
 setState(nextState: T | ((prevState: T) => T)): void

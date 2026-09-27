@@ -5,7 +5,7 @@ description: "Constructor, current state reads, and initial state reads for Stor
 
 # Store class
 
-`Store<T>` is the concrete public class exported by `@ilokesto/store`. The pending workspace release also exports a `createStore()` factory and structural `ReadableStore<T>` / `StoreApi<T>` contracts; these are not part of the currently versioned `@ilokesto/store@1.1.2`.
+`Store<T>` is the concrete public class exported by `@ilokesto/store`. The package also exports a `createStore()` factory and structural `ReadableStore<T>` / `StoreApi<T>` contracts.
 
 ```ts lineNumbers
 import { Store } from "@ilokesto/store";
@@ -64,9 +64,9 @@ store.setState(store.getInitialState());
 
 If the current state is already the same reference as the initial state, `Object.is` prevents notification. If you need subscribers to react to a reset of object state, pass a fresh object with the same fields.
 
-## Pending factory and structural contracts
+## Factory and structural contracts
 
-The workspace source defines `createStore(initialState)` as a factory for a fresh concrete `Store<T>`. It never detects or reuses a store-shaped value.
+`createStore(initialState)` creates a fresh concrete `Store<T>`. It never detects or reuses a store-shaped value.
 
 ```ts lineNumbers
 import { createStore, type ReadableStore, type StoreApi } from "@ilokesto/store";
@@ -78,7 +78,7 @@ const writer: StoreApi<{ count: number }> = counter;
 
 Use `ReadableStore<T>` when a consumer only needs reads and subscriptions. Use `StoreApi<T>` when it also needs writes and middleware registration. These structural interfaces are useful for adapters; applications that need the built-in implementation can keep using `Store<T>`.
 
-The same pending release adds `set(value)` for unambiguous replacement and `update(updater)` for computation. This distinction matters when `T` itself is a function; `setState(fn)` retains its updater meaning. All three write paths use the same middleware pipeline.
+`set(value)` provides unambiguous replacement and `update(updater)` provides explicit computation. This distinction matters when `T` itself is a function; `setState(fn)` retains its updater meaning. All three write paths use the same middleware pipeline.
 
 ## Public API summary
 
@@ -88,6 +88,9 @@ The same pending release adds `set(value)` for unambiguous replacement and `upda
 - `setState()`: replaces the value or computes it with an updater after middleware.
 - `subscribe()`: registers a listener and returns cleanup.
 - `pushMiddleware()` / `unshiftMiddleware()`: compose update middleware.
-- **Pending workspace release:** `createStore()`, `ReadableStore<T>`, `StoreApi<T>`, `set()`, `update()`, and `subscribeSelector()`.
+- `createStore()`: creates a fresh concrete store.
+- `ReadableStore<T>` / `StoreApi<T>`: structural read-only and writable contracts.
+- `set()` / `update()`: explicit replacement and computation.
+- `subscribeSelector()`: subscribes to a derived selection.
 
 Continue to [`setState`](/en/store/reference/set-state) for replacement and error behavior, or [`subscribe`](/en/store/reference/subscribe) for subscription ownership and selector delivery.

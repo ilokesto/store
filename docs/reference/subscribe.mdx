@@ -5,8 +5,6 @@ description: "Register listeners with subscribe(), or subscribeSelector() for a 
 
 # subscribe
 
-> `subscribe()` is available in `@ilokesto/store@1.1.2`. The `subscribeSelector()` and queued-delivery details below describe the pending workspace release; see the [version basis](/en/store#version-and-source-basis).
-
 `subscribe()` registers a listener and returns a cleanup function.
 
 ```ts
@@ -44,7 +42,7 @@ function connectPanel(panel: { render(value: unknown): void; destroy(cb: () => v
 
 ## Notification timing
 
-Listeners run synchronously after the state is stored. The workspace implementation captures the subscriptions for each committed value. A listener added during delivery does not receive records captured before registration. Calling its unsubscribe function marks that registration inactive immediately, so it is skipped even when an undelivered captured record still contains it.
+Listeners run synchronously after the state is stored. The implementation captures the subscriptions for each committed value. A listener added during delivery does not receive records captured before registration. Calling its unsubscribe function marks that registration inactive immediately, so it is skipped even when an undelivered captured record still contains it.
 
 ## No notification for same value
 
@@ -131,4 +129,4 @@ Keep the selector, equality function, and listener small, or catch expected erro
 
 ## Subscription ownership
 
-In the pending workspace release, registering the same callback twice creates independent subscriptions. Unsubscribe immediately cancels pending delivery for that registration. Reentrant updates commit immediately but notifications drain in FIFO order. Selectors receive each committed snapshot; `getState()` always returns the latest value.
+Registering the same callback twice creates independent subscriptions. Unsubscribe immediately cancels pending delivery for that registration. Reentrant updates commit immediately but notifications drain in FIFO order. Selectors receive each committed snapshot; `getState()` always returns the latest value.

@@ -5,7 +5,7 @@ description: "Store<T>의 constructor, 현재 상태 읽기, 초기 상태 읽�
 
 # Store 클래스
 
-`Store<T>`는 `@ilokesto/store`가 내보내는 구체 public class입니다. 다음 workspace release는 `createStore()` factory와 구조적 `ReadableStore<T>` / `StoreApi<T>` 계약도 내보내지만, 현재 버전이 적용된 `@ilokesto/store@1.1.2`에는 포함되지 않았습니다.
+`Store<T>`는 `@ilokesto/store`가 내보내는 구체 public class입니다. 패키지는 `createStore()` factory와 구조적 `ReadableStore<T>` / `StoreApi<T>` 계약도 내보냅니다.
 
 ```ts lineNumbers
 import { Store } from "@ilokesto/store";
@@ -64,9 +64,9 @@ store.setState(store.getInitialState());
 
 현재 상태가 이미 초기 상태와 같은 참조라면 `Object.is` 때문에 알림이 발생하지 않습니다. 객체 상태 reset에 구독자가 반응해야 한다면 같은 필드를 가진 새 객체를 전달하세요.
 
-## 예정된 factory와 구조적 계약
+## Factory와 구조적 계약
 
-Workspace source의 `createStore(initialState)`는 항상 새로운 구체 `Store<T>`를 만듭니다. Store와 같은 형태의 값을 감지하거나 재사용하지 않습니다.
+`createStore(initialState)`는 항상 새로운 구체 `Store<T>`를 만듭니다. Store와 같은 형태의 값을 감지하거나 재사용하지 않습니다.
 
 ```ts lineNumbers
 import { createStore, type ReadableStore, type StoreApi } from "@ilokesto/store";
@@ -78,7 +78,7 @@ const writer: StoreApi<{ count: number }> = counter;
 
 읽기와 구독만 필요한 소비자는 `ReadableStore<T>`를 사용하세요. 쓰기와 middleware 등록도 필요하면 `StoreApi<T>`를 사용하세요. 이 구조적 interface는 어댑터에 유용하며, 내장 구현이 필요한 애플리케이션은 계속 `Store<T>`를 사용하면 됩니다.
 
-같은 예정 release는 명확한 값 교체를 위한 `set(value)`와 계산을 위한 `update(updater)`도 추가합니다. `T` 자체가 함수일 때 이 구분이 중요합니다. `setState(fn)`은 계속 updater로 해석됩니다. 세 쓰기 경로는 모두 같은 middleware pipeline을 사용합니다.
+`set(value)`는 명확한 값 교체를 제공하고 `update(updater)`는 계산을 명시합니다. `T` 자체가 함수일 때 이 구분이 중요합니다. `setState(fn)`은 계속 updater로 해석됩니다. 세 쓰기 경로는 모두 같은 middleware pipeline을 사용합니다.
 
 ## Public API 요약
 
@@ -88,6 +88,9 @@ const writer: StoreApi<{ count: number }> = counter;
 - `setState()`: middleware 이후 값을 교체하거나 updater로 계산합니다.
 - `subscribe()`: 리스너를 등록하고 cleanup을 반환합니다.
 - `pushMiddleware()` / `unshiftMiddleware()`: 업데이트 미들웨어를 조합합니다.
-- **다음 workspace release:** `createStore()`, `ReadableStore<T>`, `StoreApi<T>`, `set()`, `update()`, `subscribeSelector()`.
+- `createStore()`: 새로운 구체 store를 만듭니다.
+- `ReadableStore<T>` / `StoreApi<T>`: 구조적인 읽기 전용 및 쓰기 가능 계약입니다.
+- `set()` / `update()`: 명시적인 교체와 계산입니다.
+- `subscribeSelector()`: 파생된 selection을 구독합니다.
 
 교체와 오류 동작은 [`setState`](/ko/store/reference/set-state)에서, 구독 소유권과 selector 전달은 [`subscribe`](/ko/store/reference/subscribe)에서 이어서 확인하세요.
