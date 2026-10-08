@@ -116,6 +116,78 @@ describe("ordered store transitions", () => {
     expect(received).toEqual([[2, 0]]);
   });
 
+  it("preserves arbitrary failures in notification order across reentrant commits", () => {
+    const store = new Store(0);
+    const firstFailure = { reason: "first subscriber" };
+    const secondFailure = Symbol("second subscriber");
+    const received: number[] = [];
+    store.subscribeSelector((value) => value, (value) => {
+      if (value === 1) store.set(2);
+      throw firstFailure;
+    });
+    store.subscribe(() => {
+      throw secondFailure;
+    });
+    store.subscribeSelector((value) => value, (value) => received.push(value));
+
+    let caught: unknown;
+    try {
+      store.set(1);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(AggregateError);
+    if (!(caught instanceof AggregateError)) throw new Error("Expected listener errors");
+    expect(caught.errors).toEqual([
+      firstFailure,
+      secondFailure,
+      firstFailure,
+      secondFailure,
+    ]);
+    expect(caught.errors[0]).toBe(firstFailure);
+    expect(received).toEqual([1, 2]);
+    expect(store.getState()).toBe(2);
+  });
+
+  it("preserves the selection baseline when equality fails and continues delivery", () => {
+    const store = new Store(0);
+    const received: Array<readonly [number, number]> = [];
+    const unaffected: number[] = [];
+    store.subscribeSelector(
+      (value) => value,
+      (next, previous) => received.push([next, previous]),
+      (previous, next) => {
+        if (next === 1) throw new Error("comparison failed");
+        return Object.is(previous, next);
+      },
+    );
+    store.subscribeSelector((value) => value, (value) => unaffected.push(value));
+    expect(() => store.set(1)).toThrow(AggregateError);
+
+    store.set(2);
+
+    expect(received).toEqual([[2, 0]]);
+    expect(unaffected).toEqual([1, 2]);
+  });
+
+  it("advances the selection baseline before a listener failure", () => {
+    const store = new Store(0);
+    const received: Array<readonly [number, number]> = [];
+    store.subscribeSelector(
+      (value) => value,
+      (next, previous) => {
+        received.push([next, previous]);
+        if (next === 1) throw new Error("listener failed");
+      },
+    );
+    expect(() => store.set(1)).toThrow(AggregateError);
+
+    store.set(2);
+
+    expect(received).toEqual([[1, 0], [2, 1]]);
+  });
+
   it("routes explicit set and update through middleware and keeps invalidation callbacks argument-free", () => {
     const store = new Store(0);
     const listener = vi.fn();
