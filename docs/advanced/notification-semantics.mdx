@@ -28,3 +28,34 @@ The state is already committed and is not rolled back. A failed selector/equalit
 ## Explicit writes
 
 `set(value)` treats functions as values; `update(updater)` treats its argument as computation. Both use the same middleware chain as `setState(valueOrUpdater)`.
+
+## Commit-aware integrations
+
+`Store.subscribeCommit(listener)` receives `StoreCommit<T>` records containing
+`state`, `previousState`, `sequence`, and `source`. The sequence starts at zero
+before any change; `getCommitSequence()` advances only when a different value is
+committed. Rejected or delayed middleware actions do not advance it until a commit.
+
+Commit observers run before ordinary subscribers for each captured FIFO record.
+The captured subscription list, immediate unsubscription, duplicate registration
+ownership, and aggregated errors follow the ordinary notification contract.
+Observer errors do not prevent other observers or subscribers from receiving the
+commit and do not roll state back.
+
+```ts
+const restore = Symbol('restore');
+const stop = store.subscribeCommit(({ state, previousState, sequence, source }) => {
+  record({ state, previousState, sequence, restored: source === restore });
+});
+store.replaceState(snapshot, restore);
+stop();
+```
+
+`replaceState(value, source?)` bypasses all middleware and commits a literal value,
+including callable state. It still skips identical values and uses normal FIFO
+notification delivery. A caller must perform any required validation before this
+operation. The optional source belongs only to this replacement; user updates
+triggered by its notifications have their own ordinary, undefined source.
+
+These capabilities are on the concrete `Store` class. Existing structural
+`ReadableStore` and `StoreApi` implementations do not need to add methods.

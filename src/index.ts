@@ -115,9 +115,32 @@ type Subscription<T> = {
   readonly notify: (state: Readonly<T>) => void;
 };
 
+/**
+ * Captured changed state, its predecessor, and its store-local commit identity.
+ * @example
+ * store.subscribeCommit(commit => record(commit.sequence, commit.state));
+ */
+export type StoreCommit<T> = {
+  /** Value committed by this change, even when newer commits already exist. */
+  readonly state: Readonly<T>;
+  /** Value immediately before this commit. */
+  readonly previousState: Readonly<T>;
+  /** Monotonically increasing number; the first changed value has sequence 1. */
+  readonly sequence: number;
+  /** Caller-supplied replacement identity; ordinary updates use undefined. */
+  readonly source: unknown;
+};
+
 type Notification<T> = {
   readonly state: T;
   readonly subscriptions: readonly Subscription<T>[];
+  readonly commit: StoreCommit<T>;
+  readonly observers: readonly CommitSubscription<T>[];
+};
+
+type CommitSubscription<T> = {
+  active: boolean;
+  readonly notify: (commit: StoreCommit<T>) => void;
 };
 
 /**
@@ -144,6 +167,8 @@ export class Store<T> implements StoreApi<T> {
   private notifying = false;
   private readonly middlewares: Middleware<T>[] = [];
   private cachedRunner: Dispatch<SetStateAction<T>> | null = null;
+  private sequence = 0;
+  private readonly commitObservers = new Set<CommitSubscription<T>>();
 
   /**
    * Stores the initial value as-is, including callable values.
@@ -172,6 +197,40 @@ export class Store<T> implements StoreApi<T> {
    */
   getInitialState(): Readonly<T> {
     return this.initialState;
+  }
+
+  /**
+   * Returns the latest commit number; unchanged or rejected updates do not advance it.
+   * @example
+   * const before = store.getCommitSequence();
+   */
+  getCommitSequence(): number {
+    return this.sequence;
+  }
+
+  /**
+   * Observes captured commits before ordinary subscribers, in FIFO order.
+   * Observer errors join notification errors and never roll back a commit.
+   * @example
+   * const stop = store.subscribeCommit(({ state, sequence }) => save(state, sequence));
+   */
+  subscribeCommit(listener: (commit: StoreCommit<T>) => void): Unsubscribe {
+    const observer = { active: true, notify: listener };
+    this.commitObservers.add(observer);
+    return () => {
+      observer.active = false;
+      this.commitObservers.delete(observer);
+    };
+  }
+
+  /**
+   * Immediately commits a literal value through the normal notification engine,
+   * bypassing middleware. The optional source identifies only this commit.
+   * @example
+   * store.replaceState(snapshot, replayToken);
+   */
+  replaceState(value: T, source?: unknown): void {
+    this.applyState(() => value, source);
   }
 
   /**
@@ -302,7 +361,7 @@ export class Store<T> implements StoreApi<T> {
     return this.cachedRunner;
   }
 
-  private applyState(nextState: SetStateAction<T>): void {
+  private applyState(nextState: SetStateAction<T>, source?: unknown): void {
     const prevState = this.state;
     const resolvedState =
       typeof nextState === "function"
@@ -317,6 +376,13 @@ export class Store<T> implements StoreApi<T> {
     this.notifications.push({
       state: resolvedState,
       subscriptions: [...this.subscriptions],
+      commit: {
+        state: resolvedState,
+        previousState: prevState,
+        sequence: ++this.sequence,
+        source,
+      },
+      observers: [...this.commitObservers],
     });
     this.flushNotifications();
   }
@@ -329,6 +395,14 @@ export class Store<T> implements StoreApi<T> {
     try {
       // Reentrant commits append to this queue; they never recurse into delivery.
       for (const notification of this.notifications) {
+        for (const observer of notification.observers) {
+          if (!observer.active) continue;
+          try {
+            observer.notify(notification.commit);
+          } catch (error) {
+            errors.push(error);
+          }
+        }
         for (const subscription of notification.subscriptions) {
           if (!subscription.active) continue;
           try {

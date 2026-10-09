@@ -2,6 +2,58 @@ import { describe, it, expect, vi } from "vitest";
 import { Store } from "./index";
 
 describe("Store", () => {
+  it("commit observation: reentrant updates and throwing listeners preserve captured sequence and source", () => {
+    const store = new Store(0);
+    const source = Symbol("replacement");
+    const commits: unknown[] = [];
+    store.subscribe(() => {
+      if (store.getState() === 1) store.set(2);
+      throw new Error("notification failed");
+    });
+    store.subscribeCommit(commit => commits.push(commit));
+    store.pushMiddleware(() => { throw new Error("must bypass middleware"); });
+
+    // The replacement bypasses middleware; the reentrant user update does not.
+    expect(() => store.replaceState(1, source)).toThrow(AggregateError);
+    expect(commits).toEqual([{ state: 1, previousState: 0, sequence: 1, source }]);
+    expect(store.getCommitSequence()).toBe(1);
+  });
+
+  it("commit observation: nested notifications capture each real commit without source inheritance", () => {
+    const store = new Store(0);
+    const source = Symbol("replacement");
+    const commits: unknown[] = [];
+    store.subscribeCommit(commit => commits.push(commit));
+    store.subscribe(() => {
+      if (store.getState() === 1) store.set(2);
+      throw new Error("notification failed");
+    });
+
+    expect(() => store.replaceState(1, source)).toThrow(AggregateError);
+
+    expect(commits).toEqual([
+      { state: 1, previousState: 0, sequence: 1, source },
+      { state: 2, previousState: 1, sequence: 2, source: undefined },
+    ]);
+    expect(store.getState()).toBe(2);
+    expect(store.getCommitSequence()).toBe(2);
+  });
+
+  it("commit observation: unchanged replacements and removed observers produce no delivery", () => {
+    const store = new Store(() => "value");
+    const observer = vi.fn();
+    const stop = store.subscribeCommit(observer);
+    store.replaceState(store.getState());
+    expect(store.getCommitSequence()).toBe(0);
+    stop();
+
+    store.replaceState(() => "next");
+
+    expect(observer).not.toHaveBeenCalled();
+    expect(store.getState()()).toBe("next");
+    expect(store.getCommitSequence()).toBe(1);
+  });
+
   describe("constructor", () => {
     it("stores initial state", () => {
       const store = new Store({ count: 0 });

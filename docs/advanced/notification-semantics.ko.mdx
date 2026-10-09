@@ -28,3 +28,33 @@ FIFO 전달은 재귀적인 스택 증가를 막지만 논리적인 무한 업�
 ## 명시적인 쓰기
 
 `set(value)`는 함수도 값으로 해석하고 `update(updater)`는 계산으로 해석합니다. 둘 다 `setState(valueOrUpdater)`와 같은 미들웨어 경로를 사용합니다.
+
+## Commit을 관측하는 연동
+
+`Store.subscribeCommit(listener)`는 `state`, `previousState`, `sequence`,
+`source`를 담은 `StoreCommit<T>` 기록을 전달합니다. 변경 전 순번은 0이며,
+`getCommitSequence()`는 다른 값이 실제 저장될 때만 증가합니다. 거절되거나
+지연된 미들웨어 액션은 실제 commit 전까지 순번을 늘리지 않습니다.
+
+Commit 관측자는 각 FIFO 기록의 일반 구독자보다 먼저 실행됩니다. 당시 구독
+목록 보관, 즉시 해제, 중복 등록의 독립적인 소유권과 오류 수집은 일반 알림
+계약을 따릅니다. 관측자가 실패해도 다른 관측자와 구독자에게 전달하며 이미
+저장된 상태를 되돌리지 않습니다.
+
+```ts
+const restore = Symbol('restore');
+const stop = store.subscribeCommit(({ state, previousState, sequence, source }) => {
+  record({ state, previousState, sequence, restored: source === restore });
+});
+store.replaceState(snapshot, restore);
+stop();
+```
+
+`replaceState(value, source?)`는 모든 미들웨어를 우회해 함수도 값 자체로
+저장합니다. 동일한 값은 여전히 건너뛰며 일반 FIFO 알림 엔진을 사용합니다.
+필요한 검증은 호출자가 이 동작 전에 수행해야 합니다. 선택적 출처는 해당
+교체에만 속하며, 그 알림에서 발생한 사용자 업데이트의 출처는 일반 업데이트와
+같이 `undefined`입니다.
+
+이 기능은 구체적인 `Store` 클래스에만 추가됩니다. 기존 구조적 `ReadableStore`,
+`StoreApi` 구현에는 메서드를 추가할 필요가 없습니다.

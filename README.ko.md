@@ -19,6 +19,12 @@
 
 알림은 저장 시점의 스냅샷을 동기 FIFO로 전달합니다. 해제는 대기 중인 알림에도 즉시 적용하고, 같은 콜백 등록도 독립적으로 관리하며, 리스너 오류는 전달을 마친 뒤 `AggregateError`로 전달합니다. 전체 의미론은 [알림 계약](docs/advanced/notification-semantics.ko.mdx)을 확인하세요.
 
+연동 기능은 `Store.subscribeCommit(listener)`로
+`{ state, previousState, sequence, source }` 기록을 관측하고,
+`getCommitSequence()`로 중간 변경 여부를 확인할 수 있습니다.
+`replaceState(value, source?)`는 미들웨어를 우회해 값을 즉시 교체하되 같은 알림
+엔진을 사용합니다. 이 기능은 `Store`에 추가되며 구조적 `StoreApi` 계약은 유지합니다.
+
 ## Features
 
 - 제네릭 기반 `Store<T>`

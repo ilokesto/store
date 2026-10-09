@@ -19,6 +19,12 @@ Use `createStore(value)`, `store.set(value)`, and `store.update(updater)`. Expor
 
 Notifications use synchronous FIFO commit snapshots. Unsubscribe cancels pending delivery immediately, duplicate callback registrations are independent, and listener failures are collected into an `AggregateError` after draining. Read the [notification contract](docs/advanced/notification-semantics.mdx) for the full semantics.
 
+Integrations can use `Store.subscribeCommit(listener)` to observe captured
+`{ state, previousState, sequence, source }` records and `getCommitSequence()` to
+detect intervening changes. `replaceState(value, source?)` commits a literal value
+immediately, bypassing middleware but using the same notification engine. These
+capabilities belong to `Store`; the structural `StoreApi` contract is unchanged.
+
 ## Features
 
 - Generic-based `Store<T>`
