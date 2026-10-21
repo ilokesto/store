@@ -1,0 +1,10 @@
+{
+  "title": "Integrations",
+  "pages": [
+    "react",
+    "vue",
+    "svelte",
+    "solid",
+    "angular"
+  ]
+}

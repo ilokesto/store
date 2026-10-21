@@ -1,0 +1,55 @@
+---
+title: "Store"
+description: "작은 프레임워크 중립 TypeScript 상태 컨테이너인 @ilokesto/store 공식 문서입니다."
+---
+
+# Store
+
+`@ilokesto/store`는 애플리케이션이 소유한 상태 값 하나를 다루는 작은 TypeScript 상태 컨테이너입니다. `Store<T>` 클래스, `getState()` 동기 읽기, `setState()` 교체 업데이트, `subscribe()` 변경 구독, 명시적인 미들웨어 파이프라인을 제공합니다.
+
+React, Vue, Svelte, Angular 같은 UI 런타임과 분리된 작은 상태 원시 도구가 필요할 때 사용하세요. 이 패키지는 UI 렌더링, 데이터 영속화, 네트워크 요청, 중첩 객체 병합을 대신하지 않습니다.
+
+<PackageDemo name="store" lang="ko" />
+
+## 설치
+
+```package-install
+@ilokesto/store
+```
+
+## 제공하는 것
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState().count);
+});
+
+counterStore.setState((prev) => ({ count: prev.count + 1 }));
+unsubscribe();
+```
+
+`setState()`는 저장된 값을 교체합니다. 계산된 다음 값이 이전 값과 `Object.is` 기준으로 같으면 기존 값을 유지하고 리스너에게 알리지 않습니다.
+
+## Store와 State 중 고르기
+
+순수 TypeScript 코드가 작은 값 하나를 소유하고 읽기, 쓰기, 구독 정리를 직접 제어해야 한다면 `@ilokesto/store`를 선택하세요. 컴포넌트 트리 밖의 도메인 상태, 프레임워크 어댑터 내부, 단순 이벤트 기반 모듈에 잘 맞습니다.
+
+React, Vue, Svelte, Solid, Angular용 공식 연결이 필요하거나 reducer, 영속화, 검증, DevTools, history, 시간 기반 middleware가 필요하다면 [`@ilokesto/state`](/ko/state)를 선택하세요. State는 이 패키지 위에 그런 고수준 기능을 제공합니다. 두 패키지 모두 비동기 서버 캐싱, 정규화된 엔티티, 분산 동기화는 제공하지 않습니다.
+
+## 문서 지도
+
+- **시작하기:** [빠른 시작](/ko/store/quick-start)에서 작은 장바구니 store를 만들고 실행하고, [핵심 개념](/ko/store/core-concepts)에서 교체 업데이트와 명시적 구독을 이해합니다.
+- **적용하기:** [작은 상태](/ko/store/guides/small-state), [구독 생명주기](/ko/store/guides/subscription-lifecycle), [미들웨어 조합](/ko/store/guides/composing-middleware)에서 자주 쓰는 패턴을 다룹니다.
+- **동작 확인하기:** [Store와 계약](/ko/store/reference/store), [setState](/ko/store/reference/set-state), [subscribe](/ko/store/reference/subscribe), [middleware](/ko/store/reference/middleware)에서 정확한 API를 확인합니다.
+- **직접 프레임워크 연결하기:** Integration 페이지에는 React, Vue, Svelte, Solid, Angular용 최소 어댑터가 있습니다. 관리되는 어댑터가 필요하면 [`@ilokesto/state`](/ko/state)를 사용하세요.
+- **경계 문제 진단하기:** [알림 동작](/ko/store/advanced/notification-semantics)에서 순서와 오류를, [문제 해결](/ko/store/troubleshooting)에서 흔한 실수를 확인합니다.
+
+## 버전과 소스 기준
+
+사이트 버전 선택기가 이 문서에서 다루는 정확한 패키지 릴리스를 표시합니다. API 레퍼런스는 해당 릴리스에 포함된 `createStore`, 구조적 store 계약, 명시적 `set`/`update`, FIFO 전달, selector 구독, listener 오류 집계를 포함한 패키지 표면을 설명합니다.

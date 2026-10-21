@@ -1,0 +1,80 @@
+---
+title: "Troubleshooting"
+description: "Common @ilokesto/store mistakes and how to fix them."
+---
+
+# Troubleshooting
+
+Use this page when the store behaves differently than expected.
+
+## My subscriber did not run after I changed an object
+
+You probably mutated the object in place and returned the same reference.
+
+```ts lineNumbers
+store.setState((prev) => {
+  prev.count += 1; // mutation / in place change
+  return prev;
+});
+```
+
+Because the reference is the same, `Object.is(prev, resolvedState)` is true and the store does not notify. Return a new object instead.
+
+```ts lineNumbers
+store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+## My fields disappeared
+
+`setState()` replaces state. It does not merge and it never performs a deep merge.
+
+```ts lineNumbers
+store.setState({ name: "Ada" });
+```
+
+If the old state also had `theme`, that field is gone. Preserve fields explicitly.
+
+```ts lineNumbers
+store.setState((prev) => ({ ...prev, name: "Ada" }));
+```
+
+## My updater saw an unexpected value
+
+The updater receives the state at the final application step. Middleware can transform the update before it gets there. If middleware resolves an updater early, later middleware receives a value instead of the original updater. Review middleware order and whether each middleware forwards with `next()`.
+
+## My listener keeps running after the owner is gone
+
+You forgot to call `unsubscribe`.
+
+```ts lineNumbers
+const unsubscribe = store.subscribe(() => render(store.getState()));
+
+// later
+unsubscribe();
+```
+
+Tie unsubscribe to component unmount, widget destroy, route disposal, or module shutdown.
+
+## Middleware runs in the wrong order
+
+`pushMiddleware()` appends and `unshiftMiddleware()` prepends. The first middleware in the array receives updates first because the chain is built with `reduceRight`.
+
+If order matters, write a small test or log around `next()` calls:
+
+```ts lineNumbers
+store.pushMiddleware((state, next) => {
+  console.log("before A");
+  next(state);
+  console.log("after A");
+});
+```
+
+## `getInitialState()` did not reset my store
+
+`getInitialState()` only reads the constructor value. Reset by passing a value to `setState()`.
+
+```ts lineNumbers
+store.setState(store.getInitialState());
+```
+
+For object state, create a fresh object if subscribers must run even when the store currently points at the initial reference.

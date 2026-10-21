@@ -1,0 +1,83 @@
+---
+title: "setState"
+description: "Replace state with a value or updater function and understand notification behavior."
+---
+
+# setState
+
+`setState()` accepts a value or updater. `set(value)` makes replacement explicit and `update(fn)` makes computation explicit; all three use the same middleware chain.
+
+```ts
+setState(nextState: T | ((prevState: T) => T)): void
+```
+
+The method accepts either a complete next value or an updater function. The updater receives the previous state and must return the complete next state.
+
+## Pass a complete value
+
+```ts lineNumbers
+const statusStore = new Store({ status: "idle", error: null as string | null });
+
+statusStore.setState({ status: "loading", error: null });
+```
+
+The value replaces the whole state. There is no shallow merge and no deep merge.
+
+## Pass an updater function
+
+```ts lineNumbers
+statusStore.setState((prev) => ({
+  ...prev,
+  status: "success",
+}));
+```
+
+Use an updater when the next value depends on the previous value. This is the safest pattern for arrays, counters, maps, and object state that preserves fields.
+
+## Notification algorithm
+
+The implementation resolves state in this order:
+
+1. Build a middleware chain from the registered middleware array.
+2. Run the chain with the `nextState` value or updater.
+3. In the final step, call the updater if `nextState` is a function.
+4. Compare the previous and resolved values with `Object.is`.
+5. If they are the same value or same reference, return without notifying.
+6. Otherwise store the resolved value and notify subscribers.
+
+## Replace, not merge
+
+```ts lineNumbers
+type LooseState = { a: number; b?: number };
+const store = new Store<LooseState>({ a: 1, b: 2 });
+
+store.setState({ a: 2 });
+console.log(store.getState()); // { a: 2 }
+```
+
+If you expected `{ a: 2, b: 2 }`, copy the previous object yourself.
+
+```ts lineNumbers
+store.setState((prev) => ({ ...prev, a: 2 }));
+```
+
+## Same reference means no notification
+
+```ts lineNumbers
+store.setState((prev) => prev);
+```
+
+Returning `prev` is a no-op because `Object.is(prev, prev)` is true.
+
+```ts lineNumbers
+store.setState((prev) => {
+  prev.a = 3;
+  return prev;
+});
+```
+
+This mutation is worse than a no-op: the object was changed, but subscribers were not notified because the reference stayed the same. Always return a new object or array for object state.
+
+## Errors
+
+Middleware and updater errors propagate directly. Notification errors are collected while remaining listeners and queued commits are delivered, then reported as an `AggregateError`. Already committed state is not rolled back.

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -12,6 +13,7 @@
 
 # next.js
 /.next/
+.next/
 /out/
 
 # production
@@ -22,6 +24,14 @@
 # misc
 .DS_Store
 *.pem
+*.tgz
+!docs-publication/releases/**/npm/package.tgz
+OWNERSHIP.json
+.source/
+docs-publication/.generated/
+docs-publication/runtime/.generated/
+docs-publication/.publication.lock
+artifacts/
 
 # debug
 npm-debug.log*

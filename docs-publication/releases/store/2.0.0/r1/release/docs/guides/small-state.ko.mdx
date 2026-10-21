@@ -1,0 +1,51 @@
+---
+title: "작은 상태 가이드"
+description: "과하게 설계하지 않고 @ilokesto/store로 실용적인 작은 상태를 모델링합니다."
+---
+
+# 작은 상태 가이드
+
+`@ilokesto/store`는 상태의 소유자가 작고 명확할 때 가장 잘 맞습니다. 예를 들어 장바구니 내용, 선택된 workspace, 로컬 command palette 모델, 연결 상태 객체 같은 경우입니다.
+
+## 상태 경계부터 정하기
+
+```ts lineNumbers
+type ConnectionState = {
+  status: "idle" | "connecting" | "open" | "closed";
+  lastError: string | null;
+};
+
+export const connectionStore = new Store<ConnectionState>({
+  status: "idle",
+  lastError: null,
+});
+```
+
+서로 관련 없는 관심사는 별도 store에 두세요. 모든 것을 담는 store는 reducer, normalization을 필요로 하기 쉬운데, 이 패키지는 그런 기능을 의도적으로 제공하지 않습니다.
+
+## 무작위 write 대신 action 내보내기
+
+```ts lineNumbers
+export function markConnecting(): void {
+  connectionStore.setState((prev) => ({ ...prev, status: "connecting", lastError: null }));
+}
+
+export function markClosed(error: string | null): void {
+  connectionStore.setState({ status: "closed", lastError: error });
+}
+```
+
+Action 함수는 교체 semantics를 분명하게 만들고 호출자가 필드를 빠뜨리는 실수를 줄입니다.
+
+## 경계에서 읽기
+
+snapshot이 필요한 logger, command handler, framework adapter 같은 경계에서는 `getState()`로 읽으세요. 시간이 지나도 계속 동기화해야 하는 대상에는 subscribe를 사용합니다.
+
+## 실무 체크리스트
+
+- 상태를 하나의 타입으로 설명할 수 있나요?
+- 숨겨진 deep merge 없이 전체 값을 교체해도 괜찮나요?
+- 구독자마다 명확한 소유자와 cleanup 경로가 있나요?
+- 미들웨어가 동기적으로 실행될 만큼 단순한가요?
+
+답이 아니라면 더 큰 상태 시스템을 쓰거나 `Store<T>` 주변에 도메인 전용 계층을 만드세요.

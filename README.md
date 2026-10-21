@@ -10,7 +10,7 @@ This package serves as a **vanilla store core** for building React state managem
 ## Documentation
 
 - Full docs: [English](https://ilokesto.ayden94.com/en/store) · [한국어](https://ilokesto.ayden94.com/ko/store)
-- Source: [packages/store](https://github.com/ilokesto/ilokesto/tree/main/packages/store)
+- Source: [ilokesto/store](https://github.com/ilokesto/store)
 - npm: [@ilokesto/store](https://www.npmjs.com/package/@ilokesto/store)
 
 ## Foundation
@@ -251,11 +251,21 @@ This package is a minimal core rather than a full featured React state managemen
 ## Development
 
 ```bash
-pnpm install
-pnpm run build
+pnpm install --frozen-lockfile
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm test:typecheck
+pnpm test:tooling
+pnpm migrate:verify
+pnpm docs:publication:verify
+pnpm docs:typecheck
+pnpm docs:build
+pnpm docs:test
 ```
 
-Build outputs are generated in the `dist` directory.
+The package requires Node 22 and pnpm 10.17.1. Build outputs are generated in
+`dist`; the private documentation site runs locally with `pnpm docs:start`.
 
 ## License
 

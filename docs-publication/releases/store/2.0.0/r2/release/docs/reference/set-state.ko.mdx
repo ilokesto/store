@@ -1,0 +1,83 @@
+---
+title: "setState"
+description: "값 또는 updater 함수로 상태를 교체하고 알림 동작을 이해합니다."
+---
+
+# setState
+
+`setState()`는 값 또는 updater를 받습니다. 다음 workspace release에서는 명시적인 교체에 `set(value)`, 계산에 `update(fn)`를 사용할 수 있고 세 메서드는 같은 middleware 경로를 사용합니다. `set`과 `update`는 현재 버전이 적용된 `@ilokesto/store@1.1.2`에는 없습니다.
+
+```ts
+setState(nextState: T | ((prevState: T) => T)): void
+```
+
+이 메서드는 완전한 다음 값 또는 updater 함수를 받습니다. updater는 이전 상태를 받고 완전한 다음 상태를 반환해야 합니다.
+
+## 완전한 값 전달하기
+
+```ts lineNumbers
+const statusStore = new Store({ status: "idle", error: null as string | null });
+
+statusStore.setState({ status: "loading", error: null });
+```
+
+전달한 값은 전체 상태를 교체합니다. shallow merge도 deep merge도 없습니다.
+
+## updater 함수 전달하기
+
+```ts lineNumbers
+statusStore.setState((prev) => ({
+  ...prev,
+  status: "success",
+}));
+```
+
+다음 값이 이전 값에 의존한다면 updater를 사용하세요. 배열, counter, map, 필드를 보존해야 하는 객체 상태에서 가장 안전한 패턴입니다.
+
+## 알림 알고리즘
+
+구현은 다음 순서로 상태를 계산합니다.
+
+1. 등록된 미들웨어 배열에서 middleware chain을 만듭니다.
+2. `nextState` 값 또는 updater로 chain을 실행합니다.
+3. 최종 단계에서 `nextState`가 함수라면 updater를 호출합니다.
+4. 이전 값과 계산된 값을 `Object.is`로 비교합니다.
+5. 같은 값 또는 같은 참조라면 알리지 않고 반환합니다.
+6. 다르면 계산된 값을 저장하고 구독자에게 알립니다.
+
+## 병합이 아니라 교체
+
+```ts lineNumbers
+type LooseState = { a: number; b?: number };
+const store = new Store<LooseState>({ a: 1, b: 2 });
+
+store.setState({ a: 2 });
+console.log(store.getState()); // { a: 2 }
+```
+
+`{ a: 2, b: 2 }`를 기대했다면 이전 객체를 직접 복사해야 합니다.
+
+```ts lineNumbers
+store.setState((prev) => ({ ...prev, a: 2 }));
+```
+
+## 같은 참조는 알림이 없습니다
+
+```ts lineNumbers
+store.setState((prev) => prev);
+```
+
+`prev`를 그대로 반환하면 `Object.is(prev, prev)`가 true이므로 no-op입니다.
+
+```ts lineNumbers
+store.setState((prev) => {
+  prev.a = 3;
+  return prev;
+});
+```
+
+이 mutation은 no-op보다 더 위험합니다. 객체는 바뀌었지만 참조가 같아서 구독자에게 알리지 않습니다. 객체 상태에서는 항상 새 객체나 새 배열을 반환하세요.
+
+## Error 처리
+
+미들웨어와 updater 오류는 직접 전파됩니다. 알림 오류는 나머지 리스너와 대기 중인 알림을 처리한 뒤 `AggregateError`로 전달됩니다. 이미 저장된 상태는 되돌리지 않습니다.

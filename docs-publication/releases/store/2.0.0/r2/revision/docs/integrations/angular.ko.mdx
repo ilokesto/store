@@ -1,0 +1,92 @@
+---
+title: "Angular"
+description: "signal과 DestroyRef cleanup으로 @ilokesto/store를 Angular Signals에 연결합니다."
+---
+
+# Angular
+
+Angular Signals는 작은 adapter를 통해 외부 상태를 읽을 수 있습니다. `@ilokesto/store`를 source of truth로 두고, snapshot을 writable Angular signal에 반영한 뒤 `DestroyRef`로 cleanup을 등록하세요.
+
+## signal adapter 만들기
+
+```ts lineNumbers
+import { DestroyRef, inject, signal, type Signal } from "@angular/core";
+import { Store } from "@ilokesto/store";
+
+export function useStoreSignal<T>(store: Store<T>): Signal<Readonly<T>> {
+  const destroyRef = inject(DestroyRef);
+  const state = signal<Readonly<T>>(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.set(store.getState());
+  });
+
+  destroyRef.onDestroy(unsubscribe);
+
+  return state.asReadonly();
+}
+```
+
+이 helper는 Angular injection context 안에서 호출하세요. 예를 들어 component field initializer, constructor, directive, Angular DI가 만든 service가 해당됩니다. `DestroyRef`는 그 context가 파괴될 때 cleanup callback을 실행합니다.
+
+## 컴포넌트에서 사용하기
+
+```ts lineNumbers
+import { Component } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { useStoreSignal } from "./use-store-signal";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+
+@Component({
+  selector: "app-counter-button",
+  template: `
+    <button type="button" (click)="increment()">
+      Count: {{ counter().count }}
+    </button>
+  `,
+})
+export class CounterButtonComponent {
+  readonly counter = useStoreSignal(counterStore);
+
+  increment(): void {
+    counterStore.setState((prev) => ({ count: prev.count + 1 }));
+  }
+}
+```
+
+Angular에서는 signal을 함수처럼 호출해서 읽습니다. template과 class 코드에서 `counter()`를 사용하세요.
+
+## Service가 소유하는 store
+
+앱 전체 상태라면 `Store<T>`와 action method를 Angular service에 두세요. 컴포넌트에는 readonly signal을 노출하고 write는 이름 있는 method 뒤에 둡니다.
+
+```ts lineNumbers
+import { Injectable } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { useStoreSignal } from "./use-store-signal";
+
+type SessionState = { userId: string | null };
+
+@Injectable({ providedIn: "root" })
+export class SessionStoreService {
+  private readonly store = new Store<SessionState>({ userId: null });
+  readonly state = useStoreSignal(this.store);
+
+  signIn(userId: string): void {
+    this.store.setState({ userId });
+  }
+
+  signOut(): void {
+    this.store.setState({ userId: null });
+  }
+}
+```
+
+root에 제공된 service의 cleanup은 root injector와 함께 실행됩니다. 컴포넌트 범위 상태라면 service를 컴포넌트에 provide하거나 컴포넌트에서 adapter를 직접 호출하세요.
+
+## RxJS 참고
+
+Angular는 Observable을 위한 `toSignal()` 같은 RxJS interop도 제공합니다. `@ilokesto/store`는 Observable이 아니므로 위의 직접 `signal()` adapter가 가장 작은 연결 방식입니다. 앱이 이미 RxJS를 표준으로 사용한다면 `store.subscribe()`를 먼저 Observable로 감싼 뒤 Angular의 `toSignal()`을 사용할 수 있습니다.

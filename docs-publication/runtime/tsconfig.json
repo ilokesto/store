@@ -1,0 +1,9 @@
+{
+  "extends": "../../apps/docs/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["../../apps/docs/*"]
+    }
+  },
+  "include": [".generated/**/*.ts", ".generated/**/*.tsx"]
+}

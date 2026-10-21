@@ -1,0 +1,73 @@
+---
+title: "Core concepts"
+description: "Understand replacement state, synchronous reads, listeners, and middleware in @ilokesto/store."
+---
+
+# Core concepts
+
+`@ilokesto/store` has a deliberately small model. A `Store<T>` owns one state value, `setState()` resolves the next value, `Object.is` decides whether the value changed, and listeners run after a successful replacement.
+
+## One store owns one value
+
+```ts lineNumbers
+const authStore = new Store({ userId: null as string | null });
+```
+
+The type parameter describes the entire stored value. You can store primitives, arrays, objects, or richer domain state, but the store only knows that value as one unit.
+
+## Reads are synchronous snapshots
+
+`getState()` returns the current state immediately. It does not subscribe the caller, clone the value, or wait for async work. If you need to keep UI in sync, combine `getState()` with `subscribe()` in your framework adapter.
+
+`getInitialState()` returns the value passed to the constructor. If the initial value was an object and you later mutate it outside the store, the store cannot protect you from that mutation.
+
+## Updates replace, not merge
+
+```ts lineNumbers
+type ProfileState = { name: string; theme?: string };
+const profileStore = new Store<ProfileState>({ name: "Ada", theme: "dark" });
+
+profileStore.setState({ name: "Ada" });
+// The next state is { name: "Ada" }. The old theme field is gone.
+```
+
+This is intentional. Replacement keeps the package predictable and avoids hidden shallow merge or deep merge rules. To preserve fields, copy them yourself:
+
+```ts lineNumbers
+profileStore.setState((prev) => ({ ...prev, theme: "light" }));
+```
+
+## Equality controls notification
+
+After middleware finishes, the store resolves the next value. If `Object.is(prevState, resolvedState)` is true, the store returns early and listeners are not called.
+
+That means mutating an object in place and returning the same reference is a bug:
+
+```ts lineNumbers
+profileStore.setState((prev) => {
+  prev.theme = "light";
+  return prev; // same reference, so subscribers are not notified
+});
+```
+
+Return a new object or array instead.
+
+## Subscribers are explicit
+
+`subscribe(listener)` adds a listener and returns an unsubscribe function. The listener is called with no arguments. Read state inside the listener with `getState()`.
+
+```ts lineNumbers
+const unsubscribe = profileStore.subscribe(() => {
+  render(profileStore.getState());
+});
+
+unsubscribe();
+```
+
+Always connect the cleanup function to the lifecycle that owns the listener.
+
+## Middleware wraps updates
+
+`pushMiddleware()` appends middleware to the end of the array. `unshiftMiddleware()` puts middleware at the front. During `setState()`, the store builds a right-to-left chain with `reduceRight`, so earlier middleware in the array receives the update first.
+
+Middleware can log, validate, transform, block, or forward an update. It must call `next(...)` to let later middleware and the final state application run.

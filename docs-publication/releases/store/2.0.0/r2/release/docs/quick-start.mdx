@@ -1,0 +1,102 @@
+---
+title: "Quick start"
+description: "Create a small cart store, subscribe to changes, update state, and clean up."
+---
+
+# Quick start
+
+This guide builds a tiny cart store with plain TypeScript. The important loop is: create the store, read the current value, subscribe to changes, replace state with `setState()`, then unsubscribe when the listener is no longer needed.
+
+## 1. Create a typed store
+
+Install the package in your TypeScript project:
+
+```package-install
+@ilokesto/store
+```
+
+Put the following snippets in order in one TypeScript file. They share the
+`cartStore` instance and together form a complete example.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CartItem = {
+  id: string;
+  title: string;
+  quantity: number;
+};
+
+type CartState = {
+  items: CartItem[];
+};
+
+const cartStore = new Store<CartState>({
+  items: [],
+});
+```
+
+The constructor stores the exact initial value you pass. `getInitialState()` later returns that original value; it is not a reset method.
+
+## 2. Read the latest state
+
+```ts lineNumbers
+const cart = cartStore.getState();
+console.log(cart.items);
+```
+
+`getState()` returns the current value synchronously. Treat object and array state as immutable even though TypeScript cannot deeply freeze the value at runtime.
+
+## 3. Subscribe and clean up
+
+```ts lineNumbers
+const unsubscribe = cartStore.subscribe(() => {
+  const nextCart = cartStore.getState();
+  console.log(nextCart.items.map((item) => `${item.title}: ${item.quantity}`).join(", ") || "empty");
+});
+```
+
+A listener receives no arguments. Read the latest state inside the listener. Keep the returned `unsubscribe` function and call it when the owner of the listener unmounts, disconnects, or finishes its work.
+
+## 4. Replace state with `setState()`
+
+```ts lineNumbers
+function addItem(item: CartItem): void {
+  cartStore.setState((prev) => ({
+    items: [...prev.items, item],
+  }));
+}
+
+function increaseQuantity(id: string): void {
+  cartStore.setState((prev) => ({
+    items: prev.items.map((item) =>
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+    ),
+  }));
+}
+
+function clearCart(): void {
+  cartStore.setState({ items: [] });
+}
+```
+
+`setState()` does not shallow merge or deep merge. If your state is an object, return the full next object shape you want to keep.
+
+## 5. Run the flow
+
+```ts lineNumbers
+addItem({ id: "keyboard", title: "Keyboard", quantity: 1 });
+increaseQuantity("keyboard");
+clearCart();
+
+unsubscribe();
+```
+
+Run the file with your TypeScript runner or include it in an application. The listener prints `Keyboard: 1`, then `Keyboard: 2`, then `empty`. After `unsubscribe()` runs, later `setState()` calls no longer trigger that listener.
+
+## Next steps
+
+- Read [Core concepts](/en/store/core-concepts) for replacement and equality rules.
+- Use the [Store reference](/en/store/reference/store), [`setState` reference](/en/store/reference/set-state), and [`subscribe` reference](/en/store/reference/subscribe) for exact contracts.
+- Follow [Subscription lifecycle](/en/store/guides/subscription-lifecycle) before attaching a long-lived listener.
+- If a React, Vue, Svelte, Solid, or Angular component should rerender from this state, continue with [`@ilokesto/state`](/en/state) instead of maintaining a framework adapter yourself.

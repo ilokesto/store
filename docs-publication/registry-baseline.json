@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-27T07:35:04.635Z",
+  "packages": {
+    "store": {
+      "name": "@ilokesto/store",
+      "version": "2.0.0",
+      "channel": "latest",
+      "distTags": {
+        "latest": "2.0.0"
+      },
+      "tarball": "https://registry.npmjs.org/@ilokesto/store/-/store-2.0.0.tgz",
+      "integrity": "sha512-ezW/FizFYp6yV/cwdIi7KrDN01sSRS38CC48ozkwm6UyIs0N7dNjaWaZOlVmZCieHWm9pQKxD1Z+7EVnYet82A==",
+      "sourceCommit": null,
+      "publishedAt": "2026-09-27T07:12:38.435Z"
+    }
+  }
+}

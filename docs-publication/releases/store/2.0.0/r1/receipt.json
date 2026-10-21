@@ -1,0 +1,1031 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "@ilokesto/store",
+    "version": "2.0.0",
+    "channel": "latest",
+    "revision": 1,
+    "releaseCommit": "ecd9709b76d1976ec86865314e85b916f220c818",
+    "docsCommit": "fc8bd4755137b75767284dbe84a0774185dfbdde",
+    "snapshot": "docs-publication/releases/store/2.0.0/r1"
+  },
+  "releaseSource": {
+    "commit": "ecd9709b76d1976ec86865314e85b916f220c818",
+    "packageTree": "3ab0e34d4a5c486f836c39122e4c904b4d5bccf2",
+    "docsTree": "26f0dd70ed6eae748b19d066177b9215f33fd1cf",
+    "files": [
+      {
+        "path": "packages/store/README.ko.md",
+        "mode": "100644",
+        "blob": "dc57a8d099af34589dfea8d1349992cb1e65f1e0"
+      },
+      {
+        "path": "packages/store/README.md",
+        "mode": "100644",
+        "blob": "a5efb34e5eba642c68c3bf0d3100c5da3c87c798"
+      },
+      {
+        "path": "packages/store/docs/advanced/meta.json",
+        "mode": "100644",
+        "blob": "733d03e4f5c03ea8d4664c3a58d0320dfc17f3bf"
+      },
+      {
+        "path": "packages/store/docs/advanced/notification-semantics.ko.mdx",
+        "mode": "100644",
+        "blob": "ec8da9d025c3324b6b14f70289c255d8611b176f"
+      },
+      {
+        "path": "packages/store/docs/advanced/notification-semantics.mdx",
+        "mode": "100644",
+        "blob": "b7d443ab07185e625d58d45b88fd3024eca70710"
+      },
+      {
+        "path": "packages/store/docs/core-concepts.ko.mdx",
+        "mode": "100644",
+        "blob": "14aa42f0e428eaeda9dd6f472b9d9d6065fc9771"
+      },
+      {
+        "path": "packages/store/docs/core-concepts.mdx",
+        "mode": "100644",
+        "blob": "5479a41504b217c0db8d66900fedf7a3a6de5e6e"
+      },
+      {
+        "path": "packages/store/docs/guides/composing-middleware.ko.mdx",
+        "mode": "100644",
+        "blob": "79606b5915f3706a328b6ef1ec10574f1eb6ec67"
+      },
+      {
+        "path": "packages/store/docs/guides/composing-middleware.mdx",
+        "mode": "100644",
+        "blob": "ae14989025818a86b40054a5a98adca0f598426a"
+      },
+      {
+        "path": "packages/store/docs/guides/meta.json",
+        "mode": "100644",
+        "blob": "9a4448f2e769df6956b854b3b7cf8318ef75e08f"
+      },
+      {
+        "path": "packages/store/docs/guides/small-state.ko.mdx",
+        "mode": "100644",
+        "blob": "c58c8bb1f7a58dea7ebc7b5438769d196719e9f9"
+      },
+      {
+        "path": "packages/store/docs/guides/small-state.mdx",
+        "mode": "100644",
+        "blob": "834d6a82a79c6b77ae59b4c98116ffb839dba21a"
+      },
+      {
+        "path": "packages/store/docs/guides/subscription-lifecycle.ko.mdx",
+        "mode": "100644",
+        "blob": "1db1df0af605bf78a68e59eaabf7f96d26e7f18e"
+      },
+      {
+        "path": "packages/store/docs/guides/subscription-lifecycle.mdx",
+        "mode": "100644",
+        "blob": "6564c42efe7a9f4473a7b226e67f39c34e783a58"
+      },
+      {
+        "path": "packages/store/docs/index.ko.mdx",
+        "mode": "100644",
+        "blob": "adda8294ea4a4822bbea4ab99ceba3bb16a7c8c1"
+      },
+      {
+        "path": "packages/store/docs/index.mdx",
+        "mode": "100644",
+        "blob": "7771fafdec98d7624d78bca4dcf01b7091c87d85"
+      },
+      {
+        "path": "packages/store/docs/integrations/angular.ko.mdx",
+        "mode": "100644",
+        "blob": "9315b54ebf85f759f724b94867e099bc5b26adbe"
+      },
+      {
+        "path": "packages/store/docs/integrations/angular.mdx",
+        "mode": "100644",
+        "blob": "2644069a1d8dc9ff229bb3007a60d12aa8ad75a7"
+      },
+      {
+        "path": "packages/store/docs/integrations/meta.json",
+        "mode": "100644",
+        "blob": "c810e5fe0a30f80f31e981a2ebf4015c3b20b61f"
+      },
+      {
+        "path": "packages/store/docs/integrations/react.ko.mdx",
+        "mode": "100644",
+        "blob": "64e9ab2a86e2edb7ed62edea33a95479cac326b6"
+      },
+      {
+        "path": "packages/store/docs/integrations/react.mdx",
+        "mode": "100644",
+        "blob": "816dbf2513b9bbe6f2dec2a7ca63658bf456eeb4"
+      },
+      {
+        "path": "packages/store/docs/integrations/solid.ko.mdx",
+        "mode": "100644",
+        "blob": "b15a0627bacf14633736bf03ad3d146ca903e920"
+      },
+      {
+        "path": "packages/store/docs/integrations/solid.mdx",
+        "mode": "100644",
+        "blob": "014c29b880c4524554847865882ffdda39fada3a"
+      },
+      {
+        "path": "packages/store/docs/integrations/svelte.ko.mdx",
+        "mode": "100644",
+        "blob": "fa86458c38f7bac13e93422d837e12c5c68cdf92"
+      },
+      {
+        "path": "packages/store/docs/integrations/svelte.mdx",
+        "mode": "100644",
+        "blob": "725efbfe9361f5942254ed43911d203b818e8bec"
+      },
+      {
+        "path": "packages/store/docs/integrations/vue.ko.mdx",
+        "mode": "100644",
+        "blob": "938d115986a8813700dc2da94c0b49f0d849d563"
+      },
+      {
+        "path": "packages/store/docs/integrations/vue.mdx",
+        "mode": "100644",
+        "blob": "b38fb0da85bf6755a28a65e7f3bdaf195f53b601"
+      },
+      {
+        "path": "packages/store/docs/meta.json",
+        "mode": "100644",
+        "blob": "c1d20ca8bc71fc8e18ae80af3aa1f8632aea89ef"
+      },
+      {
+        "path": "packages/store/docs/quick-start.ko.mdx",
+        "mode": "100644",
+        "blob": "c777f2a98352eb88cd522cb5e8d8db0cd5b199e5"
+      },
+      {
+        "path": "packages/store/docs/quick-start.mdx",
+        "mode": "100644",
+        "blob": "61f9a69149d5bdca4483463fa1d490ea71b51d0b"
+      },
+      {
+        "path": "packages/store/docs/reference/meta.json",
+        "mode": "100644",
+        "blob": "5f2604f08401a1415e4d792903c8d70e1a9364a9"
+      },
+      {
+        "path": "packages/store/docs/reference/middleware.ko.mdx",
+        "mode": "100644",
+        "blob": "3ef16cf00500f4aa019ba353a4028440c3f0bb9c"
+      },
+      {
+        "path": "packages/store/docs/reference/middleware.mdx",
+        "mode": "100644",
+        "blob": "bac4746c7e880b396d2c3f1684765818bc2beebe"
+      },
+      {
+        "path": "packages/store/docs/reference/set-state.ko.mdx",
+        "mode": "100644",
+        "blob": "e22c1cd621a869f520c3ba35946b29820ae9faf2"
+      },
+      {
+        "path": "packages/store/docs/reference/set-state.mdx",
+        "mode": "100644",
+        "blob": "f8214de3a924ce2018a56d375d6eb63f308a971c"
+      },
+      {
+        "path": "packages/store/docs/reference/store.ko.mdx",
+        "mode": "100644",
+        "blob": "fab65088da208e9be1320c038fa8f48315584e40"
+      },
+      {
+        "path": "packages/store/docs/reference/store.mdx",
+        "mode": "100644",
+        "blob": "86580b412f3431947b749850ed585914229ef2c8"
+      },
+      {
+        "path": "packages/store/docs/reference/subscribe.ko.mdx",
+        "mode": "100644",
+        "blob": "171fc238dac8732fae229b0ab8f98f6358f0bff6"
+      },
+      {
+        "path": "packages/store/docs/reference/subscribe.mdx",
+        "mode": "100644",
+        "blob": "be06603d9d860568f6b7c29114e03ad1dfcdbabb"
+      },
+      {
+        "path": "packages/store/docs/troubleshooting.ko.mdx",
+        "mode": "100644",
+        "blob": "f0317f91508c8f725ed5df06abfc93aede11c5c9"
+      },
+      {
+        "path": "packages/store/docs/troubleshooting.mdx",
+        "mode": "100644",
+        "blob": "696e7922c93a633d900012fd34bafe97395d51f8"
+      }
+    ]
+  },
+  "docsRevision": {
+    "commit": "fc8bd4755137b75767284dbe84a0774185dfbdde",
+    "packageTree": "23c5871048123e536d75a7771003664d62b4ce5d",
+    "docsTree": "8210407b653300a24b71016fdbd8b5b0cd7b9d16",
+    "files": [
+      {
+        "path": "packages/store/README.ko.md",
+        "mode": "100644",
+        "blob": "dc57a8d099af34589dfea8d1349992cb1e65f1e0"
+      },
+      {
+        "path": "packages/store/README.md",
+        "mode": "100644",
+        "blob": "a5efb34e5eba642c68c3bf0d3100c5da3c87c798"
+      },
+      {
+        "path": "packages/store/docs/advanced/meta.json",
+        "mode": "100644",
+        "blob": "733d03e4f5c03ea8d4664c3a58d0320dfc17f3bf"
+      },
+      {
+        "path": "packages/store/docs/advanced/notification-semantics.ko.mdx",
+        "mode": "100644",
+        "blob": "4eab943e4e0c6a6afee569b48f73490d9ee167c6"
+      },
+      {
+        "path": "packages/store/docs/advanced/notification-semantics.mdx",
+        "mode": "100644",
+        "blob": "ae72913b8245aef460dc43c33e7f949160977718"
+      },
+      {
+        "path": "packages/store/docs/core-concepts.ko.mdx",
+        "mode": "100644",
+        "blob": "14aa42f0e428eaeda9dd6f472b9d9d6065fc9771"
+      },
+      {
+        "path": "packages/store/docs/core-concepts.mdx",
+        "mode": "100644",
+        "blob": "5479a41504b217c0db8d66900fedf7a3a6de5e6e"
+      },
+      {
+        "path": "packages/store/docs/guides/composing-middleware.ko.mdx",
+        "mode": "100644",
+        "blob": "79606b5915f3706a328b6ef1ec10574f1eb6ec67"
+      },
+      {
+        "path": "packages/store/docs/guides/composing-middleware.mdx",
+        "mode": "100644",
+        "blob": "ae14989025818a86b40054a5a98adca0f598426a"
+      },
+      {
+        "path": "packages/store/docs/guides/meta.json",
+        "mode": "100644",
+        "blob": "9a4448f2e769df6956b854b3b7cf8318ef75e08f"
+      },
+      {
+        "path": "packages/store/docs/guides/small-state.ko.mdx",
+        "mode": "100644",
+        "blob": "c58c8bb1f7a58dea7ebc7b5438769d196719e9f9"
+      },
+      {
+        "path": "packages/store/docs/guides/small-state.mdx",
+        "mode": "100644",
+        "blob": "834d6a82a79c6b77ae59b4c98116ffb839dba21a"
+      },
+      {
+        "path": "packages/store/docs/guides/subscription-lifecycle.ko.mdx",
+        "mode": "100644",
+        "blob": "1db1df0af605bf78a68e59eaabf7f96d26e7f18e"
+      },
+      {
+        "path": "packages/store/docs/guides/subscription-lifecycle.mdx",
+        "mode": "100644",
+        "blob": "6564c42efe7a9f4473a7b226e67f39c34e783a58"
+      },
+      {
+        "path": "packages/store/docs/index.ko.mdx",
+        "mode": "100644",
+        "blob": "2d6406809a0a2e10376b26b98b02178c180ba12b"
+      },
+      {
+        "path": "packages/store/docs/index.mdx",
+        "mode": "100644",
+        "blob": "b7fbf7a7137b1aae0cb71c09bddb80857b5359b6"
+      },
+      {
+        "path": "packages/store/docs/integrations/angular.ko.mdx",
+        "mode": "100644",
+        "blob": "9315b54ebf85f759f724b94867e099bc5b26adbe"
+      },
+      {
+        "path": "packages/store/docs/integrations/angular.mdx",
+        "mode": "100644",
+        "blob": "2644069a1d8dc9ff229bb3007a60d12aa8ad75a7"
+      },
+      {
+        "path": "packages/store/docs/integrations/meta.json",
+        "mode": "100644",
+        "blob": "c810e5fe0a30f80f31e981a2ebf4015c3b20b61f"
+      },
+      {
+        "path": "packages/store/docs/integrations/react.ko.mdx",
+        "mode": "100644",
+        "blob": "64e9ab2a86e2edb7ed62edea33a95479cac326b6"
+      },
+      {
+        "path": "packages/store/docs/integrations/react.mdx",
+        "mode": "100644",
+        "blob": "816dbf2513b9bbe6f2dec2a7ca63658bf456eeb4"
+      },
+      {
+        "path": "packages/store/docs/integrations/solid.ko.mdx",
+        "mode": "100644",
+        "blob": "b15a0627bacf14633736bf03ad3d146ca903e920"
+      },
+      {
+        "path": "packages/store/docs/integrations/solid.mdx",
+        "mode": "100644",
+        "blob": "014c29b880c4524554847865882ffdda39fada3a"
+      },
+      {
+        "path": "packages/store/docs/integrations/svelte.ko.mdx",
+        "mode": "100644",
+        "blob": "fa86458c38f7bac13e93422d837e12c5c68cdf92"
+      },
+      {
+        "path": "packages/store/docs/integrations/svelte.mdx",
+        "mode": "100644",
+        "blob": "725efbfe9361f5942254ed43911d203b818e8bec"
+      },
+      {
+        "path": "packages/store/docs/integrations/vue.ko.mdx",
+        "mode": "100644",
+        "blob": "938d115986a8813700dc2da94c0b49f0d849d563"
+      },
+      {
+        "path": "packages/store/docs/integrations/vue.mdx",
+        "mode": "100644",
+        "blob": "b38fb0da85bf6755a28a65e7f3bdaf195f53b601"
+      },
+      {
+        "path": "packages/store/docs/meta.json",
+        "mode": "100644",
+        "blob": "c1d20ca8bc71fc8e18ae80af3aa1f8632aea89ef"
+      },
+      {
+        "path": "packages/store/docs/quick-start.ko.mdx",
+        "mode": "100644",
+        "blob": "c777f2a98352eb88cd522cb5e8d8db0cd5b199e5"
+      },
+      {
+        "path": "packages/store/docs/quick-start.mdx",
+        "mode": "100644",
+        "blob": "61f9a69149d5bdca4483463fa1d490ea71b51d0b"
+      },
+      {
+        "path": "packages/store/docs/reference/meta.json",
+        "mode": "100644",
+        "blob": "5f2604f08401a1415e4d792903c8d70e1a9364a9"
+      },
+      {
+        "path": "packages/store/docs/reference/middleware.ko.mdx",
+        "mode": "100644",
+        "blob": "3ef16cf00500f4aa019ba353a4028440c3f0bb9c"
+      },
+      {
+        "path": "packages/store/docs/reference/middleware.mdx",
+        "mode": "100644",
+        "blob": "bac4746c7e880b396d2c3f1684765818bc2beebe"
+      },
+      {
+        "path": "packages/store/docs/reference/set-state.ko.mdx",
+        "mode": "100644",
+        "blob": "2f5cd5d89309bc9dad3d1054c798255e7035f65c"
+      },
+      {
+        "path": "packages/store/docs/reference/set-state.mdx",
+        "mode": "100644",
+        "blob": "03d348999372e490b009a5786b5986eafdf8ff4a"
+      },
+      {
+        "path": "packages/store/docs/reference/store.ko.mdx",
+        "mode": "100644",
+        "blob": "1267edb074c9f8974f23ef88946fbbfb9ce84b1b"
+      },
+      {
+        "path": "packages/store/docs/reference/store.mdx",
+        "mode": "100644",
+        "blob": "aad2ac4fc573dee95b0255c656e6fe4190debd15"
+      },
+      {
+        "path": "packages/store/docs/reference/subscribe.ko.mdx",
+        "mode": "100644",
+        "blob": "77167bd2cb2245f73748f9d655e024bccb4bce42"
+      },
+      {
+        "path": "packages/store/docs/reference/subscribe.mdx",
+        "mode": "100644",
+        "blob": "49816b0d84329a237ddd81542756f703ba84378e"
+      },
+      {
+        "path": "packages/store/docs/troubleshooting.ko.mdx",
+        "mode": "100644",
+        "blob": "f0317f91508c8f725ed5df06abfc93aede11c5c9"
+      },
+      {
+        "path": "packages/store/docs/troubleshooting.mdx",
+        "mode": "100644",
+        "blob": "696e7922c93a633d900012fd34bafe97395d51f8"
+      }
+    ]
+  },
+  "runtimeSource": {
+    "commit": "ecd9709b76d1976ec86865314e85b916f220c818",
+    "files": [
+      {
+        "path": "packages/store/.gitignore",
+        "bytes": 414,
+        "sha256": "3c25d908d0d6a08b09f000d27a54b82b69058f9e1be79a37db8015a74c775b7b",
+        "blob": "76c12d6f6232f163fd6aa963813956029c384c71",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/.npmignore",
+        "bytes": 80,
+        "sha256": "430499d8f5fcb55dfcab31d3959e78582e8b3c72a2d447f600154eb6fa97f59e",
+        "blob": "39bf94bb28eefd711e1cc213965430dff9d39c3c",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/AGENTS.md",
+        "bytes": 1223,
+        "sha256": "8bb450417acb0321eb44a464f71235025195642005e84f5838861bb01139b7a1",
+        "blob": "57f435676501b8414635a2f2e625e4faf8e0c78e",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/CHANGELOG.md",
+        "bytes": 3058,
+        "sha256": "65f8d11eb585cfb51d11189cd402a35589d145e6b19498f78832faea108a645b",
+        "blob": "e810c6081008950ef8215cdb2de8610073f5d10c",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/package.json",
+        "bytes": 934,
+        "sha256": "2e20ed41e83f7074bc4efb257419eb98a6bd5560822ffd78c3572bb7212219bd",
+        "blob": "c16ec7e197d551da2182b3c57fe58b301af89794",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/src/index.test.ts",
+        "bytes": 6835,
+        "sha256": "ec973902332f7e7179ed48d451a062beda3d561f7ba2727a32f9763456e05276",
+        "blob": "9706aabad162f51e68cd2b729af484b5b2d4e08f",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/src/index.ts",
+        "bytes": 5694,
+        "sha256": "0c879c057ac5304f95b1c1f4177372ad2ec8f1c54e4bb84f63723c1f7475d7f1",
+        "blob": "5508b2d2e9ad8d7c5a032a585e803cd17cf7ea1b",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/src/notification-contract.test.ts",
+        "bytes": 4202,
+        "sha256": "e51a974ce506ecb1cf6edfadd9a82dda87065bea4c8b399206d5ef30485e6dfd",
+        "blob": "fd04203563e5b116b68628ac600c7f3031d77cf7",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/src/subscribe-selector.test.ts",
+        "bytes": 3527,
+        "sha256": "b62e3580f7956112493b1fb93924f59bcff60440d2fabc9dea91349a96c5712a",
+        "blob": "39976669de3a3f1fa50bc4d81b8fe56eda1dc464",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/tsconfig.json",
+        "bytes": 514,
+        "sha256": "be3cefc8135e22e5d7a870fac5e2acafdce3e592ef9ecfb9604e996efcfc2344",
+        "blob": "76998089339282a87136bed2bdfaf2d761320034",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/tsconfig.typecheck.json",
+        "bytes": 171,
+        "sha256": "09ed7406ebc55337c11d99ae321632a259359ec8f971520e6d352a3cae300990",
+        "blob": "5d5783f3ca79e328c136a071d99e485a49ccdcb7",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/type-tests/subscribe-override.ts",
+        "bytes": 203,
+        "sha256": "fddba13a8822ae9dadf2ab307855c8d6b2d645f8d964090a558fdd36e75dfb8a",
+        "blob": "ea1acf8fc3b96722157b62fbd268d94be3ac91d1",
+        "mode": "100644"
+      },
+      {
+        "path": "packages/store/vitest.config.ts",
+        "bytes": 139,
+        "sha256": "ce70219e7651ff59681eb9e84ed9390c45f9fd7afd4d4e1a537bda4963bcefdc",
+        "blob": "cf92f96c805b13668d53ee44831c7decb2be815f",
+        "mode": "100644"
+      }
+    ]
+  },
+  "exampleSource": {
+    "commit": "ecd9709b76d1976ec86865314e85b916f220c818",
+    "files": [
+      {
+        "path": "apps/docs/components/demos/store-demo.tsx",
+        "mode": "100644",
+        "blob": "2810588855d1d193d0ce7b47dab768e82be487d0"
+      },
+      {
+        "path": "apps/docs/components/landings/store-landing.tsx",
+        "mode": "100644",
+        "blob": "c57cfc05cc3e4165e374fcaed7f3278d13f0d8c8"
+      }
+    ]
+  },
+  "registry": {
+    "tarball": "https://registry.npmjs.org/@ilokesto/store/-/store-2.0.0.tgz",
+    "integrity": "sha512-ezW/FizFYp6yV/cwdIi7KrDN01sSRS38CC48ozkwm6UyIs0N7dNjaWaZOlVmZCieHWm9pQKxD1Z+7EVnYet82A==",
+    "shasum": "22f9d8021a38e4ee7f8a71e206fdc32d16063a77",
+    "gitHead": null,
+    "attestations": null,
+    "files": [
+      {
+        "path": "README.ko.md",
+        "bytes": 9463,
+        "sha256": "e78131ea132b445dab8ab3d303f99514e54913a57ad8f186d8518709fb71dc1e"
+      },
+      {
+        "path": "README.md",
+        "bytes": 8739,
+        "sha256": "e3851f98bc539b88ea380ad75a5107645d6190f42c1f3f0da6ff6cb10801ca07"
+      },
+      {
+        "path": "dist/index.d.ts",
+        "bytes": 2145,
+        "sha256": "bb89b1727732bb8d243a93b6961f7330bfad32c7bd07dabe993dcfe151dd559a"
+      },
+      {
+        "path": "dist/index.js",
+        "bytes": 3656,
+        "sha256": "8d9cc680ff55d09836605009e626371b57a97817b062e6d8a52269e860d06883"
+      },
+      {
+        "path": "package.json",
+        "bytes": 933,
+        "sha256": "b894350349b7895b6c77e7d7c9372f115903bcc9b2802916250ef235e421ab77"
+      }
+    ]
+  },
+  "provenance": {
+    "kind": "operational-evidence-not-cryptographic-source-provenance",
+    "report": "release-provenance.md",
+    "observedAt": "2026-09-27",
+    "publishRun": "https://github.com/ilokesto/ilokesto/actions/runs/36302267041",
+    "publishCheckout": "ecd9709b76d1976ec86865314e85b916f220c818",
+    "npmGitHead": null,
+    "npmAttestations": null,
+    "evidence": [
+      "The successful workflow checked out this commit; all eight annotated release tags peel to it.",
+      "Both shipped READMEs match source blobs; packed manifests differ only by workspace protocol rewrites.",
+      "The audit compared all published dist bytes with matching builds, including a fresh Fetcher build."
+    ],
+    "limitation": "npm exposes neither gitHead nor source provenance attestations for these versions. Workflow, tags, and byte comparisons support the source association but do not cryptographically prove it.",
+    "reportSha256": "374af7f4df1dd24d2e34aefb96656f779dbbbae0f6890cc817239b975fb29343",
+    "tag": "@ilokesto/store@2.0.0",
+    "tagTarget": "ecd9709b76d1976ec86865314e85b916f220c818"
+  },
+  "files": [
+    {
+      "path": "examples/apps/docs/components/demos/store-demo.tsx",
+      "bytes": 3345,
+      "sha256": "6163b8b642e6b42d3f0f81051b9e4b7dd1c3789e77be084de8a18d45b3aa026a"
+    },
+    {
+      "path": "examples/apps/docs/components/landings/store-landing.tsx",
+      "bytes": 3811,
+      "sha256": "e9d3716e1a89e45e2226aeb1c7310569c717cf26f17b1de4625362c40c023b48"
+    },
+    {
+      "path": "npm/package.tgz",
+      "bytes": 7802,
+      "sha256": "e8c6d4dc917c796453488d3be80896b7e76b7929cd4e0b8a644d75bb84c51207"
+    },
+    {
+      "path": "provenance/release-provenance.md",
+      "bytes": 21178,
+      "sha256": "374af7f4df1dd24d2e34aefb96656f779dbbbae0f6890cc817239b975fb29343"
+    },
+    {
+      "path": "release/README.ko.md",
+      "bytes": 9463,
+      "sha256": "e78131ea132b445dab8ab3d303f99514e54913a57ad8f186d8518709fb71dc1e"
+    },
+    {
+      "path": "release/README.md",
+      "bytes": 8739,
+      "sha256": "e3851f98bc539b88ea380ad75a5107645d6190f42c1f3f0da6ff6cb10801ca07"
+    },
+    {
+      "path": "release/docs/advanced/meta.json",
+      "bytes": 88,
+      "sha256": "b1ac32eb7217f7f26f16c29f67db5fc97a7ffc1e6e4b9cfe25d9e29008504908"
+    },
+    {
+      "path": "release/docs/advanced/notification-semantics.ko.mdx",
+      "bytes": 2809,
+      "sha256": "52a7eeebaf5affa088f97b6ddc975b85d1e9419c5dfcaa11c86b7c342416cc2b"
+    },
+    {
+      "path": "release/docs/advanced/notification-semantics.mdx",
+      "bytes": 2562,
+      "sha256": "ddea5eab978e124bfb39fb270f7ec26fe07e2ac28c760749702c8987692fe98f"
+    },
+    {
+      "path": "release/docs/core-concepts.ko.mdx",
+      "bytes": 3481,
+      "sha256": "b4c4ff770b6ac4389bdb95a912f7d78623a845b059db6f903570a2a343b6c842"
+    },
+    {
+      "path": "release/docs/core-concepts.mdx",
+      "bytes": 2983,
+      "sha256": "d3800523346b2a84f76f296f0717386491ecb74c245784ae1386a8199ee7ecf7"
+    },
+    {
+      "path": "release/docs/guides/composing-middleware.ko.mdx",
+      "bytes": 2012,
+      "sha256": "7ae669217c828cc465bdae155ce02c1c7ff91708e6c4d010f13d1336645b1167"
+    },
+    {
+      "path": "release/docs/guides/composing-middleware.mdx",
+      "bytes": 1729,
+      "sha256": "1e916b26eddd0e9f4058aae8b7543b74ddbca5a5ded5b5c9c50d2c88682db1eb"
+    },
+    {
+      "path": "release/docs/guides/meta.json",
+      "bytes": 125,
+      "sha256": "514fba2102b3f782914aec245792dd19466bdcdb26dc217a42c21635cb5e1e05"
+    },
+    {
+      "path": "release/docs/guides/small-state.ko.mdx",
+      "bytes": 2004,
+      "sha256": "b5c41bb01fb7cf76e1e0848b101c7031e3713ac5eb75ac1d788caecd3136eb42"
+    },
+    {
+      "path": "release/docs/guides/small-state.mdx",
+      "bytes": 1718,
+      "sha256": "3e6d058507415a5b5e07b48897542ff113e6ba61c6f2c6053939189632f0e1e7"
+    },
+    {
+      "path": "release/docs/guides/subscription-lifecycle.ko.mdx",
+      "bytes": 1712,
+      "sha256": "06848a1b74763b0c16014fe20c47b4236c3964dc2008655d3348e27cdf62b985"
+    },
+    {
+      "path": "release/docs/guides/subscription-lifecycle.mdx",
+      "bytes": 1519,
+      "sha256": "e89cccd0c923bf0437e7800680c6ef32e11baa4b92b006245721037e33a2df47"
+    },
+    {
+      "path": "release/docs/index.ko.mdx",
+      "bytes": 3843,
+      "sha256": "7b2fb3faf1c15c3963361fe12faa2cd1e2dff00a0ab6e15e04b4795242b97dc6"
+    },
+    {
+      "path": "release/docs/index.mdx",
+      "bytes": 3570,
+      "sha256": "f7cd6e9e52e5f7fd4c3c0681d961404f0aa7598585e609a3fbf5ffed3f2411c0"
+    },
+    {
+      "path": "release/docs/integrations/angular.ko.mdx",
+      "bytes": 3272,
+      "sha256": "a66b87229b121493dd58d42cde2962d08cf9735c4588516aab28cd42f2185b24"
+    },
+    {
+      "path": "release/docs/integrations/angular.mdx",
+      "bytes": 3026,
+      "sha256": "7f093ec4b4c1b40a016d950a201fed3c020373ef80cf15e5e16c12845525d68d"
+    },
+    {
+      "path": "release/docs/integrations/meta.json",
+      "bytes": 113,
+      "sha256": "adf39f814121bd77ee0ffa8092ce704bb5416c3a2bc5f658b84b36a7a8858b0b"
+    },
+    {
+      "path": "release/docs/integrations/react.ko.mdx",
+      "bytes": 2468,
+      "sha256": "b829a78232fa499b907b41e8dde59c458126d9683fc396860c25e567d9b85f81"
+    },
+    {
+      "path": "release/docs/integrations/react.mdx",
+      "bytes": 2260,
+      "sha256": "ecae5c06593eb7ecbf4a45276a79cd8eaed26f48fa1d81101e59402d6568e895"
+    },
+    {
+      "path": "release/docs/integrations/solid.ko.mdx",
+      "bytes": 2252,
+      "sha256": "bdba7dccf70ae8143718b86ba2a41908459cf1fddbf468e31b212cb10b2719ae"
+    },
+    {
+      "path": "release/docs/integrations/solid.mdx",
+      "bytes": 2062,
+      "sha256": "ed723fb527d5359476ac753b8c96edc098d8055d87daf8b428c1e8af07c35a8f"
+    },
+    {
+      "path": "release/docs/integrations/svelte.ko.mdx",
+      "bytes": 2639,
+      "sha256": "353d3d5577756a19066012994e091f10ee7f0254beea93d432d5b35e0aef3bbd"
+    },
+    {
+      "path": "release/docs/integrations/svelte.mdx",
+      "bytes": 2418,
+      "sha256": "76584ba14102b7fa1c479d637feaed96cbf6b5e39466b7f81232ece0df3bae4d"
+    },
+    {
+      "path": "release/docs/integrations/vue.ko.mdx",
+      "bytes": 2260,
+      "sha256": "aab4836af8f600060b72e0264f7e8f84644213aa29d555ed4e68a7e1e1f5de0f"
+    },
+    {
+      "path": "release/docs/integrations/vue.mdx",
+      "bytes": 2018,
+      "sha256": "7fc97778e0790464759ab02f5004a2246aa9b84f98513dfd749b5da58bd97ce0"
+    },
+    {
+      "path": "release/docs/meta.json",
+      "bytes": 331,
+      "sha256": "3670db3f2913849ec4416ff02f9d53874c3b010f2e27d647aea5ad1d1dafe5b7"
+    },
+    {
+      "path": "release/docs/quick-start.ko.mdx",
+      "bytes": 3701,
+      "sha256": "2422115a161aace0913bb0b942303758d3c4098354c8dde40f8d728e06737602"
+    },
+    {
+      "path": "release/docs/quick-start.mdx",
+      "bytes": 3303,
+      "sha256": "b064edfa3fe8612b6af2dd08e3e8ebe0881ce14dc90df48449d56174b9a45312"
+    },
+    {
+      "path": "release/docs/reference/meta.json",
+      "bytes": 112,
+      "sha256": "082632d078b87a8d3004fe1a70df95e120272542e75b99cffe846252cdb676b7"
+    },
+    {
+      "path": "release/docs/reference/middleware.ko.mdx",
+      "bytes": 2367,
+      "sha256": "81dba2daadd12448f4ae6d8e64855c467e26e7ad2a3fcd9e932b2d3845930e26"
+    },
+    {
+      "path": "release/docs/reference/middleware.mdx",
+      "bytes": 2091,
+      "sha256": "9f9fb50c9febff5f7b548305f98f918bf0c8f6056739141fef94c44cec8289f9"
+    },
+    {
+      "path": "release/docs/reference/set-state.ko.mdx",
+      "bytes": 2903,
+      "sha256": "50ba6f75a85b4e4d27b199acc4ccc62603bfc207674418828abab1b0c77ec0c2"
+    },
+    {
+      "path": "release/docs/reference/set-state.mdx",
+      "bytes": 2696,
+      "sha256": "59cd000fe8c824d312493fd7cab157cb57191b4a1af9bb2f690a297b55cb03a4"
+    },
+    {
+      "path": "release/docs/reference/store.ko.mdx",
+      "bytes": 4079,
+      "sha256": "54c86f87859a7c322581d96e342f904beb8717c561aebe4209c5b8cb38a2dbfb"
+    },
+    {
+      "path": "release/docs/reference/store.mdx",
+      "bytes": 3654,
+      "sha256": "f476ce00de7f0b5cbffbe359bffebbc29087796749c2b1ea0c7a16ef3033b7f3"
+    },
+    {
+      "path": "release/docs/reference/subscribe.ko.mdx",
+      "bytes": 7378,
+      "sha256": "b9c78c0b147990bfd226479cb818358a07e1a115123c934663bb85d4b2565da4"
+    },
+    {
+      "path": "release/docs/reference/subscribe.mdx",
+      "bytes": 6608,
+      "sha256": "67f9320ec81ea4ca10b0aa7bd6332d996aab30e65cc6bf8e266921b3f3a3d48a"
+    },
+    {
+      "path": "release/docs/troubleshooting.ko.mdx",
+      "bytes": 2781,
+      "sha256": "6f2b433c76c227e87c468f132a81a1fd5c3444f5995eb7ce9b2ac4395ab6bea1"
+    },
+    {
+      "path": "release/docs/troubleshooting.mdx",
+      "bytes": 2372,
+      "sha256": "c8dbdc9293c98ad5ce8fbd8cc8e3cdf95ba156ed65d1e50919ed8f33fd0fbb92"
+    },
+    {
+      "path": "revision/README.ko.md",
+      "bytes": 9463,
+      "sha256": "e78131ea132b445dab8ab3d303f99514e54913a57ad8f186d8518709fb71dc1e"
+    },
+    {
+      "path": "revision/README.md",
+      "bytes": 8739,
+      "sha256": "e3851f98bc539b88ea380ad75a5107645d6190f42c1f3f0da6ff6cb10801ca07"
+    },
+    {
+      "path": "revision/docs/advanced/meta.json",
+      "bytes": 88,
+      "sha256": "b1ac32eb7217f7f26f16c29f67db5fc97a7ffc1e6e4b9cfe25d9e29008504908"
+    },
+    {
+      "path": "revision/docs/advanced/notification-semantics.ko.mdx",
+      "bytes": 2589,
+      "sha256": "fa18d1c6a8f76325675898424e59657a341fbea535bf1e12bc25efa5d9cd922b"
+    },
+    {
+      "path": "revision/docs/advanced/notification-semantics.mdx",
+      "bytes": 2370,
+      "sha256": "9543f614676485863c043f8902f301bdefd3e58eb701babe04d63705476b5a57"
+    },
+    {
+      "path": "revision/docs/core-concepts.ko.mdx",
+      "bytes": 3481,
+      "sha256": "b4c4ff770b6ac4389bdb95a912f7d78623a845b059db6f903570a2a343b6c842"
+    },
+    {
+      "path": "revision/docs/core-concepts.mdx",
+      "bytes": 2983,
+      "sha256": "d3800523346b2a84f76f296f0717386491ecb74c245784ae1386a8199ee7ecf7"
+    },
+    {
+      "path": "revision/docs/guides/composing-middleware.ko.mdx",
+      "bytes": 2012,
+      "sha256": "7ae669217c828cc465bdae155ce02c1c7ff91708e6c4d010f13d1336645b1167"
+    },
+    {
+      "path": "revision/docs/guides/composing-middleware.mdx",
+      "bytes": 1729,
+      "sha256": "1e916b26eddd0e9f4058aae8b7543b74ddbca5a5ded5b5c9c50d2c88682db1eb"
+    },
+    {
+      "path": "revision/docs/guides/meta.json",
+      "bytes": 125,
+      "sha256": "514fba2102b3f782914aec245792dd19466bdcdb26dc217a42c21635cb5e1e05"
+    },
+    {
+      "path": "revision/docs/guides/small-state.ko.mdx",
+      "bytes": 2004,
+      "sha256": "b5c41bb01fb7cf76e1e0848b101c7031e3713ac5eb75ac1d788caecd3136eb42"
+    },
+    {
+      "path": "revision/docs/guides/small-state.mdx",
+      "bytes": 1718,
+      "sha256": "3e6d058507415a5b5e07b48897542ff113e6ba61c6f2c6053939189632f0e1e7"
+    },
+    {
+      "path": "revision/docs/guides/subscription-lifecycle.ko.mdx",
+      "bytes": 1712,
+      "sha256": "06848a1b74763b0c16014fe20c47b4236c3964dc2008655d3348e27cdf62b985"
+    },
+    {
+      "path": "revision/docs/guides/subscription-lifecycle.mdx",
+      "bytes": 1519,
+      "sha256": "e89cccd0c923bf0437e7800680c6ef32e11baa4b92b006245721037e33a2df47"
+    },
+    {
+      "path": "revision/docs/index.ko.mdx",
+      "bytes": 3603,
+      "sha256": "ffc4372d2daa94a02476704badd8c2c6e662e5e2188732ecdefc26810ab787b9"
+    },
+    {
+      "path": "revision/docs/index.mdx",
+      "bytes": 3323,
+      "sha256": "3891cce8cee64e2b0d91eb452caa377c73b8668f4356214f1d292cd69467b6a5"
+    },
+    {
+      "path": "revision/docs/integrations/angular.ko.mdx",
+      "bytes": 3272,
+      "sha256": "a66b87229b121493dd58d42cde2962d08cf9735c4588516aab28cd42f2185b24"
+    },
+    {
+      "path": "revision/docs/integrations/angular.mdx",
+      "bytes": 3026,
+      "sha256": "7f093ec4b4c1b40a016d950a201fed3c020373ef80cf15e5e16c12845525d68d"
+    },
+    {
+      "path": "revision/docs/integrations/meta.json",
+      "bytes": 113,
+      "sha256": "adf39f814121bd77ee0ffa8092ce704bb5416c3a2bc5f658b84b36a7a8858b0b"
+    },
+    {
+      "path": "revision/docs/integrations/react.ko.mdx",
+      "bytes": 2468,
+      "sha256": "b829a78232fa499b907b41e8dde59c458126d9683fc396860c25e567d9b85f81"
+    },
+    {
+      "path": "revision/docs/integrations/react.mdx",
+      "bytes": 2260,
+      "sha256": "ecae5c06593eb7ecbf4a45276a79cd8eaed26f48fa1d81101e59402d6568e895"
+    },
+    {
+      "path": "revision/docs/integrations/solid.ko.mdx",
+      "bytes": 2252,
+      "sha256": "bdba7dccf70ae8143718b86ba2a41908459cf1fddbf468e31b212cb10b2719ae"
+    },
+    {
+      "path": "revision/docs/integrations/solid.mdx",
+      "bytes": 2062,
+      "sha256": "ed723fb527d5359476ac753b8c96edc098d8055d87daf8b428c1e8af07c35a8f"
+    },
+    {
+      "path": "revision/docs/integrations/svelte.ko.mdx",
+      "bytes": 2639,
+      "sha256": "353d3d5577756a19066012994e091f10ee7f0254beea93d432d5b35e0aef3bbd"
+    },
+    {
+      "path": "revision/docs/integrations/svelte.mdx",
+      "bytes": 2418,
+      "sha256": "76584ba14102b7fa1c479d637feaed96cbf6b5e39466b7f81232ece0df3bae4d"
+    },
+    {
+      "path": "revision/docs/integrations/vue.ko.mdx",
+      "bytes": 2260,
+      "sha256": "aab4836af8f600060b72e0264f7e8f84644213aa29d555ed4e68a7e1e1f5de0f"
+    },
+    {
+      "path": "revision/docs/integrations/vue.mdx",
+      "bytes": 2018,
+      "sha256": "7fc97778e0790464759ab02f5004a2246aa9b84f98513dfd749b5da58bd97ce0"
+    },
+    {
+      "path": "revision/docs/meta.json",
+      "bytes": 331,
+      "sha256": "3670db3f2913849ec4416ff02f9d53874c3b010f2e27d647aea5ad1d1dafe5b7"
+    },
+    {
+      "path": "revision/docs/quick-start.ko.mdx",
+      "bytes": 3701,
+      "sha256": "2422115a161aace0913bb0b942303758d3c4098354c8dde40f8d728e06737602"
+    },
+    {
+      "path": "revision/docs/quick-start.mdx",
+      "bytes": 3303,
+      "sha256": "b064edfa3fe8612b6af2dd08e3e8ebe0881ce14dc90df48449d56174b9a45312"
+    },
+    {
+      "path": "revision/docs/reference/meta.json",
+      "bytes": 112,
+      "sha256": "082632d078b87a8d3004fe1a70df95e120272542e75b99cffe846252cdb676b7"
+    },
+    {
+      "path": "revision/docs/reference/middleware.ko.mdx",
+      "bytes": 2367,
+      "sha256": "81dba2daadd12448f4ae6d8e64855c467e26e7ad2a3fcd9e932b2d3845930e26"
+    },
+    {
+      "path": "revision/docs/reference/middleware.mdx",
+      "bytes": 2091,
+      "sha256": "9f9fb50c9febff5f7b548305f98f918bf0c8f6056739141fef94c44cec8289f9"
+    },
+    {
+      "path": "revision/docs/reference/set-state.ko.mdx",
+      "bytes": 2783,
+      "sha256": "86b859498103460f766cb8534b233e8d7f03e069e08266cd62db03583789060b"
+    },
+    {
+      "path": "revision/docs/reference/set-state.mdx",
+      "bytes": 2578,
+      "sha256": "e8d364dcb2b5c5bd72e9af3603919c4319643b246c518b3103a8046b6e1180d2"
+    },
+    {
+      "path": "revision/docs/reference/store.ko.mdx",
+      "bytes": 4081,
+      "sha256": "c2376dbfacfac84d1483165ed52f48b66ad3b5ddc075f4129e8b95527b745d16"
+    },
+    {
+      "path": "revision/docs/reference/store.mdx",
+      "bytes": 3631,
+      "sha256": "6aded2bcebb2f72aa7135c6d2637692a9e27d88881cc0c9f84c1ebfeef409238"
+    },
+    {
+      "path": "revision/docs/reference/subscribe.ko.mdx",
+      "bytes": 7072,
+      "sha256": "caefe2880752fc7bafb39beb53b340db0987dc17a3a4e4c5919d4a43aa223201"
+    },
+    {
+      "path": "revision/docs/reference/subscribe.mdx",
+      "bytes": 6345,
+      "sha256": "d02ea6192392367e794d754a9a45d1de625609de766cbd1d422a2b2cae0f5e39"
+    },
+    {
+      "path": "revision/docs/troubleshooting.ko.mdx",
+      "bytes": 2781,
+      "sha256": "6f2b433c76c227e87c468f132a81a1fd5c3444f5995eb7ce9b2ac4395ab6bea1"
+    },
+    {
+      "path": "revision/docs/troubleshooting.mdx",
+      "bytes": 2372,
+      "sha256": "c8dbdc9293c98ad5ce8fbd8cc8e3cdf95ba156ed65d1e50919ed8f33fd0fbb92"
+    }
+  ]
+}

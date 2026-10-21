@@ -1,20 +1,15 @@
 {
   "name": "@ilokesto/store",
   "version": "2.0.1",
-  "scripts": {
-    "build": "rm -rf dist && tsc",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.typecheck.json",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ilokesto/ilokesto.git",
-    "directory": "packages/store"
-  },
-  "homepage": "https://ilokesto.ayden94.com/ko/store",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",
@@ -24,18 +19,44 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "keywords": [],
-  "publishConfig": {
-    "access": "public"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilokesto/store.git"
   },
+  "homepage": "https://github.com/ilokesto/store",
   "author": "Jeong Jinho <wpfekdml@me.com>",
-  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.typecheck.json",
+    "test": "vitest run src",
+    "test:watch": "vitest",
+    "test:typecheck": "tsc --project tsconfig.typecheck.json",
+    "test:tooling": "node --test tests/tooling/*.test.mjs",
+    "docs:prepare": "pnpm build",
+    "docs:dev": "pnpm docs:prepare && pnpm --dir website dev",
+    "docs:build": "pnpm docs:prepare && pnpm --dir website build",
+    "docs:typecheck": "pnpm docs:prepare && pnpm --dir website typecheck",
+    "docs:test": "pnpm --dir website test",
+    "docs:start": "pnpm --dir website start",
+    "docs:publication:verify": "node scripts/docs-publication.mjs verify && node scripts/docs-runtime.mjs verify",
+    "docs:publication:capture": "node scripts/docs-publication.mjs capture",
+    "docs:publication:promote": "node scripts/docs-publication.mjs promote",
+    "migrate:verify": "node scripts/verify-migration.mjs",
+    "release:verify": "node scripts/release-verify.mjs",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "version-packages": "changeset version && pnpm install --lockfile-only"
+  },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.10"
-  }
+    "@changesets/cli": "2.31.1",
+    "@types/node": "26.2.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10",
+    "yaml": "2.8.2"
+  },
+  "packageManager": "pnpm@10.17.1"
 }

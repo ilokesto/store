@@ -1,0 +1,92 @@
+---
+title: "Angular"
+description: "Connect @ilokesto/store to Angular Signals with signal and DestroyRef cleanup."
+---
+
+# Angular
+
+Angular Signals can read external state through a small adapter. Keep `@ilokesto/store` as the source of truth, mirror its snapshot into a writable Angular signal, and register cleanup with `DestroyRef`.
+
+## Create a signal adapter
+
+```ts lineNumbers
+import { DestroyRef, inject, signal, type Signal } from "@angular/core";
+import { Store } from "@ilokesto/store";
+
+export function useStoreSignal<T>(store: Store<T>): Signal<Readonly<T>> {
+  const destroyRef = inject(DestroyRef);
+  const state = signal<Readonly<T>>(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.set(store.getState());
+  });
+
+  destroyRef.onDestroy(unsubscribe);
+
+  return state.asReadonly();
+}
+```
+
+Call this helper in an Angular injection context, such as a component field initializer, constructor, directive, or service created by Angular DI. `DestroyRef` runs the cleanup callback when that context is destroyed.
+
+## Use it in a component
+
+```ts lineNumbers
+import { Component } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { useStoreSignal } from "./use-store-signal";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+
+@Component({
+  selector: "app-counter-button",
+  template: `
+    <button type="button" (click)="increment()">
+      Count: {{ counter().count }}
+    </button>
+  `,
+})
+export class CounterButtonComponent {
+  readonly counter = useStoreSignal(counterStore);
+
+  increment(): void {
+    counterStore.setState((prev) => ({ count: prev.count + 1 }));
+  }
+}
+```
+
+Angular reads a signal by calling it like a function. Use `counter()` in templates and class code.
+
+## Service-owned stores
+
+For app-wide state, put the `Store<T>` and action methods in an Angular service. Expose a readonly signal to components and keep writes behind named methods.
+
+```ts lineNumbers
+import { Injectable } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { useStoreSignal } from "./use-store-signal";
+
+type SessionState = { userId: string | null };
+
+@Injectable({ providedIn: "root" })
+export class SessionStoreService {
+  private readonly store = new Store<SessionState>({ userId: null });
+  readonly state = useStoreSignal(this.store);
+
+  signIn(userId: string): void {
+    this.store.setState({ userId });
+  }
+
+  signOut(): void {
+    this.store.setState({ userId: null });
+  }
+}
+```
+
+If a service is provided at root, its cleanup runs with the root injector. For component-scoped state, provide the service at the component or call the adapter directly in the component.
+
+## RxJS note
+
+Angular also provides RxJS interop such as `toSignal()` for Observables. `@ilokesto/store` is not an Observable, so the direct `signal()` adapter above is the smallest bridge. If your app already standardizes on RxJS, you can wrap `store.subscribe()` as an Observable first and then use Angular's `toSignal()`.

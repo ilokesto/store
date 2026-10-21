@@ -1,0 +1,102 @@
+---
+title: "빠른 시작"
+description: "작은 장바구니 store를 만들고, 변경을 구독하고, 상태를 업데이트하고, 구독을 정리합니다."
+---
+
+# 빠른 시작
+
+이 가이드는 순수 TypeScript로 작은 장바구니 store를 만듭니다. 핵심 흐름은 store 만들기, 현재 값 읽기, 변경 구독하기, `setState()`로 상태 교체하기, 리스너가 더 필요하지 않을 때 구독 해제하기입니다.
+
+## 1. 타입이 있는 store 만들기
+
+TypeScript 프로젝트에 패키지를 설치하세요.
+
+```package-install
+@ilokesto/store
+```
+
+아래 코드 블록을 순서대로 하나의 TypeScript 파일에 넣으세요.
+같은 `cartStore` 인스턴스를 사용하며, 모두 합치면 실행 가능한 예제가 됩니다.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CartItem = {
+  id: string;
+  title: string;
+  quantity: number;
+};
+
+type CartState = {
+  items: CartItem[];
+};
+
+const cartStore = new Store<CartState>({
+  items: [],
+});
+```
+
+constructor는 전달한 초기 값을 그대로 보관합니다. `getInitialState()`는 나중에 그 원본 초기 값을 반환하지만 reset 메서드는 아닙니다.
+
+## 2. 최신 상태 읽기
+
+```ts lineNumbers
+const cart = cartStore.getState();
+console.log(cart.items);
+```
+
+`getState()`는 현재 값을 동기적으로 반환합니다. TypeScript가 런타임에서 깊게 freeze하지는 않으므로 객체와 배열 상태는 불변 값처럼 다루세요.
+
+## 3. 구독하고 정리하기
+
+```ts lineNumbers
+const unsubscribe = cartStore.subscribe(() => {
+  const nextCart = cartStore.getState();
+  console.log(nextCart.items.map((item) => `${item.title}: ${item.quantity}`).join(", ") || "empty");
+});
+```
+
+리스너는 인자를 받지 않습니다. 리스너 안에서 최신 상태를 읽으세요. 반환된 `unsubscribe` 함수를 보관했다가 리스너의 소유자가 unmount, disconnect, 또는 작업 종료될 때 호출합니다.
+
+## 4. `setState()`로 상태 교체하기
+
+```ts lineNumbers
+function addItem(item: CartItem): void {
+  cartStore.setState((prev) => ({
+    items: [...prev.items, item],
+  }));
+}
+
+function increaseQuantity(id: string): void {
+  cartStore.setState((prev) => ({
+    items: prev.items.map((item) =>
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+    ),
+  }));
+}
+
+function clearCart(): void {
+  cartStore.setState({ items: [] });
+}
+```
+
+`setState()`는 shallow merge나 deep merge를 하지 않습니다. 상태가 객체라면 보존하려는 전체 다음 객체 형태를 반환하세요.
+
+## 5. 흐름 실행하기
+
+```ts lineNumbers
+addItem({ id: "keyboard", title: "Keyboard", quantity: 1 });
+increaseQuantity("keyboard");
+clearCart();
+
+unsubscribe();
+```
+
+TypeScript runner로 이 파일을 실행하거나 애플리케이션에 포함하세요. 리스너는 `Keyboard: 1`, `Keyboard: 2`, `empty`를 차례로 출력합니다. `unsubscribe()`가 실행된 뒤에는 이후 `setState()` 호출이 그 리스너를 실행하지 않습니다.
+
+## 다음 단계
+
+- 교체와 동등성 규칙은 [핵심 개념](/ko/store/core-concepts)을 읽으세요.
+- 정확한 계약은 [Store 레퍼런스](/ko/store/reference/store), [`setState` 레퍼런스](/ko/store/reference/set-state), [`subscribe` 레퍼런스](/ko/store/reference/subscribe)를 확인하세요.
+- 오래 유지되는 리스너를 붙이기 전에 [구독 생명주기](/ko/store/guides/subscription-lifecycle)를 읽으세요.
+- React, Vue, Svelte, Solid, Angular 컴포넌트가 이 상태로 다시 렌더링되어야 한다면 프레임워크 어댑터를 직접 관리하는 대신 [`@ilokesto/state`](/ko/state)로 이어가세요.

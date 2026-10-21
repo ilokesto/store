@@ -1,0 +1,50 @@
+---
+title: "Composing middleware"
+description: "Build predictable logging, validation, and transformation middleware."
+---
+
+# Composing middleware
+
+Middleware is useful when every update should pass through the same rule: logging, validation, normalization, or instrumentation.
+
+## Add logging first
+
+```ts lineNumbers
+store.pushMiddleware((nextState, next) => {
+  const before = store.getState();
+  next(nextState);
+  const after = store.getState();
+
+  if (!Object.is(before, after)) {
+    console.debug("store changed", { before, after });
+  }
+});
+```
+
+Because `next()` applies the rest of the chain, code after `next()` observes the final state unless a later middleware blocked the update.
+
+## Validate before applying
+
+```ts lineNumbers
+store.unshiftMiddleware((nextState, next) => {
+  const resolved = typeof nextState === "function" ? nextState(store.getState()) : nextState;
+
+  if (resolved.count < 0) {
+    return;
+  }
+
+  next(resolved);
+});
+```
+
+This middleware resolves updater functions early so it can validate the value. That means later middleware receives a value instead of the original updater. Document that choice when middleware order matters.
+
+## Choose order deliberately
+
+- Use `unshiftMiddleware()` for a rule that must see updates before existing middleware.
+- Use `pushMiddleware()` for a rule that should sit after existing earlier rules.
+- Remember that the first middleware in the array receives the update first because the implementation chains with `reduceRight`.
+
+## Keep middleware synchronous
+
+Middleware runs inside `setState()`. Avoid async side effects that make ordering hard to reason about. If you need async work, start it outside the store and call `setState()` with the result later.

@@ -1,0 +1,9 @@
+packages:
+  - .
+  - website
+  - docs-publication/runtime
+
+linkWorkspacePackages: false
+
+onlyBuiltDependencies:
+  - esbuild

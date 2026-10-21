@@ -1,0 +1,63 @@
+---
+title: "Vue"
+description: "shallowRef와 lifecycle cleanup으로 @ilokesto/store를 Vue에 연결합니다."
+---
+
+# Vue
+
+Vue는 외부에서 관리되는 상태를 `shallowRef`에 담는 방식을 권장합니다. Vue는 `.value` 컨테이너만 추적하고, 내부 값의 소유권은 외부 store에 남겨둡니다. 이는 root 상태 값을 교체하는 `@ilokesto/store` 방식과 잘 맞습니다.
+
+## composable 만들기
+
+```ts lineNumbers
+import { onUnmounted, shallowRef, type ShallowRef } from "vue";
+import { Store } from "@ilokesto/store";
+
+export function useStoreRef<T>(store: Store<T>): ShallowRef<Readonly<T>> {
+  const state = shallowRef(store.getState()) as ShallowRef<Readonly<T>>;
+
+  const unsubscribe = store.subscribe(() => {
+    state.value = store.getState();
+  });
+
+  onUnmounted(unsubscribe);
+
+  return state;
+}
+```
+
+이 composable은 `setup()` 또는 컴포넌트 lifecycle 안에서 실행되는 다른 composable에서 호출하세요. 컴포넌트 밖에서 구독한다면 `unsubscribe`를 직접 보관하고 호출해야 합니다.
+
+## 컴포넌트에서 사용하기
+
+```vue lineNumbers
+<script setup lang="ts">
+import { Store } from "@ilokesto/store";
+import { useStoreRef } from "./useStoreRef";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+const counter = useStoreRef(counterStore);
+
+function increment() {
+  counterStore.setState((prev) => ({ count: prev.count + 1 }));
+}
+</script>
+
+<template>
+  <button type="button" @click="increment">
+    Count: {{ counter.count }}
+  </button>
+</template>
+```
+
+template에서는 ref unwrapping 덕분에 `counter.count`로 읽을 수 있습니다. 일반 TypeScript 코드에서는 `counter.value.count`로 읽으세요.
+
+## 왜 `shallowRef`인가요?
+
+`@ilokesto/store`가 상태 객체를 소유합니다. Vue는 store가 root 값을 교체할 때만 반응하면 됩니다. `shallowRef`는 내부 상태를 깊게 proxy로 변환하지 않고, `state.value`가 교체될 때 Vue 업데이트를 발생시킵니다.
+
+## Mutation 주의
+
+`state.value`를 직접 수정하지 마세요. 미들웨어 적용, `Object.is` 비교, 구독자 알림이 모두 동작하도록 `store.setState()`를 통해 업데이트하세요.

@@ -1,0 +1,61 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Exact main SHA with successful Verify artifact
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: publish-main
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Bootstrap is disabled in both this workflow and the checked-in policy.
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    environment: Production
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Bind dispatch before checkout
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$GITHUB_REPOSITORY" == "ilokesto/store" ]] || exit 1
+          [[ "$GITHUB_REF" == "refs/heads/main" ]] || exit 1
+          [[ "$GITHUB_SHA" == "$RELEASE_SHA" ]] || exit 1
+          [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" == "$RELEASE_SHA" ]] || exit 1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Configure release tag identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Publish only the exact Verify artifact after live revalidation
+        run: node scripts/publish-verified.mjs "$RELEASE_SHA"
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

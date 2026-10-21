@@ -1,0 +1,28 @@
+---
+title: "Mental model"
+description: "Understand provider scope, modal stacks, transports, and the two-phase close lifecycle."
+---
+
+# Mental model
+
+## One provider, one modal stack
+
+`ModalProvider` mounts the overlay host, registers the modal adapter, injects shared keyframes, and owns stack policy. Only the top modal responds to Escape, backdrop clicks, and focus containment. Each layer receives a higher inline z-index.
+
+A provider without `store` uses `globalModalStore` so the module-level `modal` facade can reach it. Mount only one such default provider. For independent trees, create separate stores with `createOverlayStore()` from `@ilokesto/overlay` and pass one to each provider.
+
+## Display, close, remove
+
+`display<TResult>()` opens a modal and returns `Promise<TResult | undefined>`. The scoped `close(result)` supplied to `render` changes the modal from `open` to `closing`. The adapter keeps it mounted for exit motion, then removes it; only removal settles the promise.
+
+`reject(id, reason)` follows the same closing phase but rejects the promise on removal. `remove` skips directly to removal. `clear` removes every modal immediately. `closeAll` starts exit motion for every open modal.
+
+## Inline and top-layer transport
+
+`inline` is the default. It renders a fixed wrapper, package backdrop, focus trap, and position styles. `top-layer` uses native `<dialog>.showModal()`, native top-layer stacking, and native focus behavior while retaining the package close lifecycle. Both transports share provider-local topmost-modal policy.
+
+## Presentation belongs to your content
+
+The package styles the transport, backdrop, and motion. It does not provide a card, heading, buttons, or design tokens. Your `render` callback supplies that content through `className`, `style`, `backdropClassName`, and `backdropStyle` when needed.
+
+If you do not want these modal policies, use [`@ilokesto/overlay`](/en/overlay) and write an adapter. If you do want them, do not rebuild focus and dismissal around the lower-level runtime.

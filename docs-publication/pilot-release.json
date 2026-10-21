@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "name": "@ilokesto/store",
+    "version": "1.1.2",
+    "tarball": "https://registry.npmjs.org/@ilokesto/store/-/store-1.1.2.tgz",
+    "integrity": "sha512-MDH/Ng9JM/btv2RSY/xyY49QXKhjaGQBtXbTWHscAWt+Mv4OQtsWXmUajXmaHLEyx3g2QxN9nOYCYqhzGYUG2g==",
+    "sourceCommit": "be7b9bbde59bbbf2bc890fe3020dd9fe521f17d8",
+    "publishedAt": "2026-07-16T06:48:33.419Z"
+  }
+}

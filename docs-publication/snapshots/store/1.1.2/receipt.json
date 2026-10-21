@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "@ilokesto/store",
+    "version": "1.1.2"
+  },
+  "packagePath": "docs-publication/snapshots/store/1.1.2/package",
+  "registry": {
+    "tarball": "https://registry.npmjs.org/@ilokesto/store/-/store-1.1.2.tgz",
+    "integrity": "sha512-MDH/Ng9JM/btv2RSY/xyY49QXKhjaGQBtXbTWHscAWt+Mv4OQtsWXmUajXmaHLEyx3g2QxN9nOYCYqhzGYUG2g==",
+    "shasum": "7bd92b013565fbc4ffdc9bf00e6a3a7ac50a8fce",
+    "gitHead": "be7b9bbde59bbbf2bc890fe3020dd9fe521f17d8",
+    "publishedAt": "2026-07-16T06:48:33.419Z"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4579,
+      "sha256": "38e92533db6b69aba5d945993406903753347f98047da803558c3c0d550afcec"
+    },
+    {
+      "path": "README.ko.md",
+      "bytes": 4873,
+      "sha256": "7d2749fbd657bfc1289d671cb35930828a09e6f4e23f84854401f6224d15ed9e"
+    },
+    {
+      "path": "package.json",
+      "bytes": 851,
+      "sha256": "8bee813b6b434b6fb1c5d6c5309a78d63ca4c45812357cbb296eb49e8974fe2b"
+    },
+    {
+      "path": "dist/index.js",
+      "bytes": 1757,
+      "sha256": "6dcf6d5b8f3641d5af440e1c1bfa767d9a4dbd257b1a34f2202e67b402059627"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "bytes": 780,
+      "sha256": "f3c31dbd4b2a5ce0f388721d992410e212e4b228ae064fc3d5f50149a890e119"
+    }
+  ]
+}

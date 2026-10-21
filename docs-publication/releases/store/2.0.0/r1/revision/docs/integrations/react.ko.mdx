@@ -1,0 +1,68 @@
+---
+title: "React"
+description: "useSyncExternalStore로 @ilokesto/store를 React에 연결합니다."
+---
+
+# React
+
+React에서는 `useSyncExternalStore`가 `@ilokesto/store`를 연결하기 좋은 adapter 지점입니다. 이 Hook은 안정적인 `subscribe` 함수, `getSnapshot` 함수, SSR을 위한 선택적 server snapshot을 받습니다.
+
+## store에서 Hook 만들기
+
+```tsx lineNumbers
+import { useSyncExternalStore } from "react";
+import { Store } from "@ilokesto/store";
+
+export function createStoreHook<T>(store: Store<T>) {
+  const subscribe = (onStoreChange: () => void) => {
+    return store.subscribe(onStoreChange);
+  };
+
+  const getSnapshot = () => store.getState();
+  const getServerSnapshot = () => store.getInitialState();
+
+  return function useStoreSnapshot(): Readonly<T> {
+    return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  };
+}
+```
+
+store를 정의하는 곳 근처에서 Hook을 한 번만 만드세요. 컴포넌트 render마다 `subscribe`를 새로 만들면 React가 함수 identity 변화를 보고 다시 구독할 수 있습니다.
+
+## 컴포넌트에서 사용하기
+
+```tsx lineNumbers
+type CounterState = { count: number };
+
+export const counterStore = new Store<CounterState>({ count: 0 });
+export const useCounter = createStoreHook(counterStore);
+
+export function CounterButton() {
+  const counter = useCounter();
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        counterStore.setState((prev) => ({ count: prev.count + 1 }))
+      }
+    >
+      Count: {counter.count}
+    </button>
+  );
+}
+```
+
+## Snapshot 규칙
+
+React는 snapshot을 `Object.is`로 비교합니다. `@ilokesto/store`도 계산된 상태가 이전 상태와 `Object.is` 기준으로 같으면 알림을 건너뜁니다. snapshot은 불변 값처럼 다루고, 변경이 있을 때는 항상 새 객체나 새 배열을 반환하세요.
+
+```ts
+counterStore.setState((prev) => ({ count: prev.count + 1 }));
+```
+
+제자리에서 직접 수정한 뒤 같은 객체를 반환하지 마세요. React도 다른 snapshot을 보지 못하고, store도 구독자에게 알리지 않습니다.
+
+## SSR 참고
+
+위 예제의 `getServerSnapshot`은 `getInitialState()`를 반환합니다. 서버와 클라이언트가 같은 초기 값에서 시작한다면 안전합니다. 요청별 상태를 서버에서 내려보낸다면 hydration 동안 `getServerSnapshot`도 그 직렬화된 같은 값을 반환해야 합니다.

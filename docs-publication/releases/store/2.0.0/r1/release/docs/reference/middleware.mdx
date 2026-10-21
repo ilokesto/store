@@ -1,0 +1,78 @@
+---
+title: "Middleware"
+description: "Compose update middleware with pushMiddleware and unshiftMiddleware."
+---
+
+# Middleware
+
+Middleware lets you wrap `setState()` before the store applies the next value.
+
+The public methods are:
+
+```ts
+pushMiddleware(middleware: Middleware<T>): void
+unshiftMiddleware(middleware: Middleware<T>): void
+```
+
+The internal middleware shape is equivalent to:
+
+```ts
+type SetStateAction<T> = T | ((prevState: T) => T);
+type Middleware<T> = (
+  nextState: SetStateAction<T>,
+  next: (value: SetStateAction<T>) => void
+) => void;
+```
+
+## Order
+
+`pushMiddleware()` appends to the middleware array. `unshiftMiddleware()` prepends to the array. During `setState()`, the store uses `reduceRight`, so the first middleware in the array receives the update first.
+
+```ts lineNumbers
+const calls: string[] = [];
+
+store.pushMiddleware((state, next) => {
+  calls.push("A before");
+  next(state);
+  calls.push("A after");
+});
+
+store.pushMiddleware((state, next) => {
+  calls.push("B before");
+  next(state);
+  calls.push("B after");
+});
+
+store.setState((prev) => prev);
+// A before, B before, B after, A after
+```
+
+With `unshiftMiddleware()`, the new middleware becomes the first one to receive future updates.
+
+## Transforming updates
+
+Middleware can pass a different value or updater to `next()`.
+
+```ts lineNumbers
+store.pushMiddleware((nextState, next) => {
+  next((prev) => {
+    const resolved = typeof nextState === "function" ? nextState(prev) : nextState;
+    return { ...resolved, updatedAt: Date.now() };
+  });
+});
+```
+
+## Blocking updates
+
+Middleware can block an update by not calling `next()`. Use this carefully and document the reason, because subscribers will not run and the caller receives no return value explaining the block.
+
+```ts lineNumbers
+store.pushMiddleware((nextState, next) => {
+  if (isInvalid(nextState)) return;
+  next(nextState);
+});
+```
+
+## Side effects
+
+Middleware runs synchronously inside `setState()`. Keep long work, network calls, and timers outside the middleware chain unless you intentionally want `setState()` to wait or throw.

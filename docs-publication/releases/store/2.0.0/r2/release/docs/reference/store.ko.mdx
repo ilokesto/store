@@ -1,0 +1,93 @@
+---
+title: "Store 클래스"
+description: "Store<T>의 constructor, 현재 상태 읽기, 초기 상태 읽기입니다."
+---
+
+# Store 클래스
+
+`Store<T>`는 `@ilokesto/store`가 내보내는 구체 public class입니다. 다음 workspace release는 `createStore()` factory와 구조적 `ReadableStore<T>` / `StoreApi<T>` 계약도 내보내지만, 현재 버전이 적용된 `@ilokesto/store@1.1.2`에는 포함되지 않았습니다.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+const store = new Store({ ready: false });
+```
+
+## Constructor
+
+```ts
+new Store<T>(initialState: T)
+```
+
+constructor는 `initialState`를 첫 현재 상태로 저장하고, 동시에 `getInitialState()`가 반환할 값으로 보관합니다.
+
+복제는 일어나지 않습니다. 객체를 전달했다면 소유권 규칙을 지키세요. store에 넘긴 뒤에는 그 객체를 불변 값처럼 다루는 편이 안전합니다.
+
+## `getState()`
+
+```ts
+getState(): Readonly<T>
+```
+
+현재 상태를 동기적으로 반환합니다. `Readonly<T>` 타입은 반환 값을 통해 직접 대입하는 일을 줄여주지만, 런타임 freeze를 만들지는 않으며 TypeScript 관점에서도 깊은 불변은 아닙니다.
+
+```ts lineNumbers
+const state = store.getState();
+console.log(state.ready);
+```
+
+`getState()`는 다음 경우에 사용하세요.
+
+- 즉시 필요한 값을 계산할 때,
+- `subscribe()` 리스너 안에서,
+- 최신 snapshot을 렌더링해야 하는 어댑터 코드에서.
+
+상태를 제자리에서 직접 수정하기 위한 통로로 사용하지 마세요.
+
+## `getInitialState()`
+
+```ts
+getInitialState(): Readonly<T>
+```
+
+constructor가 잡아 둔 정확한 초기 값을 반환합니다.
+
+```ts lineNumbers
+const initial = store.getInitialState();
+```
+
+`getInitialState()`는 store를 reset하지 않습니다. reset하려면 직접 초기 값을 `setState()`에 다시 전달하세요.
+
+```ts lineNumbers
+store.setState(store.getInitialState());
+```
+
+현재 상태가 이미 초기 상태와 같은 참조라면 `Object.is` 때문에 알림이 발생하지 않습니다. 객체 상태 reset에 구독자가 반응해야 한다면 같은 필드를 가진 새 객체를 전달하세요.
+
+## 예정된 factory와 구조적 계약
+
+Workspace source의 `createStore(initialState)`는 항상 새로운 구체 `Store<T>`를 만듭니다. Store와 같은 형태의 값을 감지하거나 재사용하지 않습니다.
+
+```ts lineNumbers
+import { createStore, type ReadableStore, type StoreApi } from "@ilokesto/store";
+
+const counter = createStore({ count: 0 });
+const reader: ReadableStore<{ count: number }> = counter;
+const writer: StoreApi<{ count: number }> = counter;
+```
+
+읽기와 구독만 필요한 소비자는 `ReadableStore<T>`를 사용하세요. 쓰기와 middleware 등록도 필요하면 `StoreApi<T>`를 사용하세요. 이 구조적 interface는 어댑터에 유용하며, 내장 구현이 필요한 애플리케이션은 계속 `Store<T>`를 사용하면 됩니다.
+
+같은 예정 release는 명확한 값 교체를 위한 `set(value)`와 계산을 위한 `update(updater)`도 추가합니다. `T` 자체가 함수일 때 이 구분이 중요합니다. `setState(fn)`은 계속 updater로 해석됩니다. 세 쓰기 경로는 모두 같은 middleware pipeline을 사용합니다.
+
+## Public API 요약
+
+- `Store<T>`: 상태 값 하나를 소유합니다.
+- `getState()`: 현재 값을 읽습니다.
+- `getInitialState()`: constructor 값을 읽습니다.
+- `setState()`: middleware 이후 값을 교체하거나 updater로 계산합니다.
+- `subscribe()`: 리스너를 등록하고 cleanup을 반환합니다.
+- `pushMiddleware()` / `unshiftMiddleware()`: 업데이트 미들웨어를 조합합니다.
+- **다음 workspace release:** `createStore()`, `ReadableStore<T>`, `StoreApi<T>`, `set()`, `update()`, `subscribeSelector()`.
+
+교체와 오류 동작은 [`setState`](/ko/store/reference/set-state)에서, 구독 소유권과 selector 전달은 [`subscribe`](/ko/store/reference/subscribe)에서 이어서 확인하세요.

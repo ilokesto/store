@@ -1,0 +1,51 @@
+---
+title: "Small state guide"
+description: "Model small practical state with @ilokesto/store without overbuilding."
+---
+
+# Small state guide
+
+`@ilokesto/store` works best when the state has a small, clear owner. Think cart contents, a selected workspace, a local command palette model, or a connection status object.
+
+## Start with the state boundary
+
+```ts lineNumbers
+type ConnectionState = {
+  status: "idle" | "connecting" | "open" | "closed";
+  lastError: string | null;
+};
+
+export const connectionStore = new Store<ConnectionState>({
+  status: "idle",
+  lastError: null,
+});
+```
+
+Keep unrelated concerns in separate stores. A store that contains everything tends to need reducers and normalization that this package intentionally does not provide.
+
+## Export actions, not random writes
+
+```ts lineNumbers
+export function markConnecting(): void {
+  connectionStore.setState((prev) => ({ ...prev, status: "connecting", lastError: null }));
+}
+
+export function markClosed(error: string | null): void {
+  connectionStore.setState({ status: "closed", lastError: error });
+}
+```
+
+Action functions make replacement semantics obvious and keep callers from forgetting fields.
+
+## Read at the edge
+
+Read with `getState()` where you need a snapshot: a logger, a command handler, or a framework adapter. Subscribe where you need to keep something synchronized over time.
+
+## Practical checklist
+
+- Can you describe the state in one type?
+- Can updates replace the whole value without hidden deep merge behavior?
+- Do subscribers have a clear owner and cleanup path?
+- Would middleware be simple enough to run synchronously?
+
+If the answer is no, use a larger state system or build a domain-specific layer around `Store<T>`.

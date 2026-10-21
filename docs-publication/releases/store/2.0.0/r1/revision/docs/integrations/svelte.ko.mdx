@@ -1,0 +1,85 @@
+---
+title: "Svelte"
+description: "Svelte store contract로 @ilokesto/store를 노출합니다."
+---
+
+# Svelte
+
+Svelte store는 `subscribe` 메서드를 가진 객체입니다. subscriber는 현재 값과 이후 업데이트를 받고, `subscribe`는 구독 해제 함수를 반환합니다. `@ilokesto/store`는 작은 wrapper로 이 contract에 맞출 수 있습니다.
+
+## readable adapter 만들기
+
+```ts lineNumbers
+import type { Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function toReadable<T>(store: Store<T>): Readable<Readonly<T>> {
+  return {
+    subscribe(run) {
+      run(store.getState());
+
+      return store.subscribe(() => {
+        run(store.getState());
+      });
+    },
+  };
+}
+```
+
+처음의 `run(store.getState())`가 중요합니다. Svelte subscriber는 구독하는 순간 현재 값을 받는다고 기대합니다. 이후 store 업데이트가 발생하면 다시 `run()`을 호출합니다.
+
+## 필요할 때 write helper 추가하기
+
+```ts lineNumbers
+import type { Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+type StoreWritable<T> = Readable<Readonly<T>> & {
+  set(value: T): void;
+  update(updater: (prev: T) => T): void;
+};
+
+export function toWritable<T>(store: Store<T>): StoreWritable<T> {
+  const readable = toReadable(store);
+
+  return {
+    subscribe: readable.subscribe,
+    set(value) {
+      store.setState(value);
+    },
+    update(updater) {
+      store.setState(updater);
+    },
+  };
+}
+```
+
+컴포넌트가 상태를 관찰만 해야 한다면 readable adapter를 사용하세요. Svelte 컴포넌트가 store를 직접 업데이트해도 되는 경우에만 writable adapter를 사용합니다.
+
+## 컴포넌트에서 사용하기
+
+```svelte lineNumbers
+<script lang="ts">
+  import { Store } from "@ilokesto/store";
+  import { toWritable } from "./svelte-store";
+
+  type CounterState = { count: number };
+
+  const counterStore = new Store<CounterState>({ count: 0 });
+  const counter = toWritable(counterStore);
+
+  function increment() {
+    counter.update((prev) => ({ count: prev.count + 1 }));
+  }
+</script>
+
+<button type="button" on:click={increment}>
+  Count: {$counter.count}
+</button>
+```
+
+Svelte는 컴포넌트가 살아 있는 동안 `$counter`를 자동으로 구독하고, 컴포넌트 cleanup 때 구독을 해제합니다.
+
+## 소유권을 분명히 하기
+
+다른 모듈도 같은 `Store<T>`를 업데이트한다면 모든 곳에 `set`을 노출하기보다 이름 있는 action 함수를 export하는 편이 좋습니다. 그래야 교체 semantics와 미들웨어 기대값을 한곳에 둘 수 있습니다.

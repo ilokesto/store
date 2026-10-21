@@ -1,0 +1,85 @@
+---
+title: "Svelte"
+description: "Expose @ilokesto/store through the Svelte store contract."
+---
+
+# Svelte
+
+Svelte stores are objects with a `subscribe` method. A subscriber receives the current value and later updates, and `subscribe` returns an unsubscribe function. `@ilokesto/store` can be adapted to that contract with a small wrapper.
+
+## Create a readable adapter
+
+```ts lineNumbers
+import type { Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function toReadable<T>(store: Store<T>): Readable<Readonly<T>> {
+  return {
+    subscribe(run) {
+      run(store.getState());
+
+      return store.subscribe(() => {
+        run(store.getState());
+      });
+    },
+  };
+}
+```
+
+The first `run(store.getState())` is important because Svelte subscribers expect to receive the current value when they subscribe. Later store updates call `run()` again.
+
+## Add write helpers when needed
+
+```ts lineNumbers
+import type { Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+type StoreWritable<T> = Readable<Readonly<T>> & {
+  set(value: T): void;
+  update(updater: (prev: T) => T): void;
+};
+
+export function toWritable<T>(store: Store<T>): StoreWritable<T> {
+  const readable = toReadable(store);
+
+  return {
+    subscribe: readable.subscribe,
+    set(value) {
+      store.setState(value);
+    },
+    update(updater) {
+      store.setState(updater);
+    },
+  };
+}
+```
+
+Use the readable adapter when components should only observe state. Use the writable adapter only when Svelte components are allowed to update the store directly.
+
+## Use it in a component
+
+```svelte lineNumbers
+<script lang="ts">
+  import { Store } from "@ilokesto/store";
+  import { toWritable } from "./svelte-store";
+
+  type CounterState = { count: number };
+
+  const counterStore = new Store<CounterState>({ count: 0 });
+  const counter = toWritable(counterStore);
+
+  function increment() {
+    counter.update((prev) => ({ count: prev.count + 1 }));
+  }
+</script>
+
+<button type="button" on:click={increment}>
+  Count: {$counter.count}
+</button>
+```
+
+Svelte automatically subscribes to `$counter` while the component is alive and unsubscribes during component cleanup.
+
+## Keep ownership clear
+
+If other modules also update the same `Store<T>`, prefer exporting named action functions instead of exposing `set` everywhere. That keeps replacement semantics and middleware expectations in one place.

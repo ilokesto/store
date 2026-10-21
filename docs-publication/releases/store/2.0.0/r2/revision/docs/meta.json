@@ -1,0 +1,19 @@
+{
+  "title": "Store",
+  "root": true,
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "quick-start",
+    "core-concepts",
+    "---Reference---",
+    "...reference",
+    "---Guides---",
+    "...guides",
+    "---Integrations---",
+    "...integrations",
+    "---Advanced---",
+    "...advanced",
+    "troubleshooting"
+  ]
+}

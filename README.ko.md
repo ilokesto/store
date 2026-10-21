@@ -10,7 +10,7 @@
 ## 문서
 
 - 전체 문서: [English](https://ilokesto.ayden94.com/en/store) · [한국어](https://ilokesto.ayden94.com/ko/store)
-- 소스: [packages/store](https://github.com/ilokesto/ilokesto/tree/main/packages/store)
+- 소스: [ilokesto/store](https://github.com/ilokesto/store)
 - npm: [@ilokesto/store](https://www.npmjs.com/package/@ilokesto/store)
 
 ## 기반 구조
@@ -251,11 +251,21 @@ store.setState((prev) => {
 ## Development
 
 ```bash
-pnpm install
-pnpm run build
+pnpm install --frozen-lockfile
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm test:typecheck
+pnpm test:tooling
+pnpm migrate:verify
+pnpm docs:publication:verify
+pnpm docs:typecheck
+pnpm docs:build
+pnpm docs:test
 ```
 
-빌드 결과물은 `dist` 디렉터리에 생성됩니다.
+Node.js 22와 pnpm 10.17.1을 사용하세요. 빌드 결과물은 `dist` 디렉터리에
+생성되며, 전용 문서 사이트는 `pnpm docs:start`로 로컬에서 실행합니다.
 
 ## License
 

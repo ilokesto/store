@@ -1,0 +1,63 @@
+---
+title: "Vue"
+description: "Connect @ilokesto/store to Vue with shallowRef and lifecycle cleanup."
+---
+
+# Vue
+
+Vue recommends holding externally managed state in a `shallowRef`: Vue tracks the `.value` container, while the inner value stays owned by the external store. That matches `@ilokesto/store`, where updates should replace the root state value.
+
+## Create a composable
+
+```ts lineNumbers
+import { onUnmounted, shallowRef, type ShallowRef } from "vue";
+import { Store } from "@ilokesto/store";
+
+export function useStoreRef<T>(store: Store<T>): ShallowRef<Readonly<T>> {
+  const state = shallowRef(store.getState()) as ShallowRef<Readonly<T>>;
+
+  const unsubscribe = store.subscribe(() => {
+    state.value = store.getState();
+  });
+
+  onUnmounted(unsubscribe);
+
+  return state;
+}
+```
+
+Call this composable from `setup()` or another composable that runs inside a component lifecycle. If you subscribe outside a component, keep and call `unsubscribe` manually.
+
+## Use it in a component
+
+```vue lineNumbers
+<script setup lang="ts">
+import { Store } from "@ilokesto/store";
+import { useStoreRef } from "./useStoreRef";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+const counter = useStoreRef(counterStore);
+
+function increment() {
+  counterStore.setState((prev) => ({ count: prev.count + 1 }));
+}
+</script>
+
+<template>
+  <button type="button" @click="increment">
+    Count: {{ counter.count }}
+  </button>
+</template>
+```
+
+Template ref unwrapping lets the template read `counter.count`. In plain TypeScript code, read `counter.value.count`.
+
+## Why `shallowRef`?
+
+`@ilokesto/store` owns the state object. Vue should only react when the store replaces the root value. `shallowRef` avoids deep proxy conversion of the inner state and updates Vue when `state.value` is replaced.
+
+## Mutation warning
+
+Do not mutate `state.value` directly. Update through `store.setState()` so the store can apply middleware, compare with `Object.is`, and notify subscribers.

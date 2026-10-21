@@ -1,0 +1,55 @@
+---
+title: "구독 생명주기"
+description: "모듈, 컴포넌트, 어댑터에서 subscribe cleanup을 소유합니다."
+---
+
+# 구독 생명주기
+
+구독은 resource입니다. `subscribe()`는 리스너를 추가하고 그 리스너를 정리할 유일한 cleanup 함수를 반환합니다.
+
+## 모듈 수준 구독
+
+오래 사는 모듈은 한 번만 구독할 수 있지만 그래도 shutdown 경로가 필요합니다.
+
+```ts lineNumbers
+let stopLogging: (() => void) | null = null;
+
+export function startLogging(): void {
+  if (stopLogging) return;
+  stopLogging = store.subscribe(() => {
+    console.debug("state", store.getState());
+  });
+}
+
+export function stopLoggingNow(): void {
+  stopLogging?.();
+  stopLogging = null;
+}
+```
+
+## 컴포넌트 또는 위젯 구독
+
+UI 코드에서는 component cleanup hook이나 widget destroy callback에서 `unsubscribe`를 호출하세요.
+
+```ts lineNumbers
+function mountWidget(node: HTMLElement): () => void {
+  const render = () => {
+    node.textContent = JSON.stringify(store.getState());
+  };
+
+  render();
+  const unsubscribe = store.subscribe(render);
+  return unsubscribe;
+}
+```
+
+## 오래된 owner 버그 피하기
+
+기존 구독을 정리하지 않고 render마다 새 구독을 만들지 마세요. owner가 접근할 수 없는 곳에 `unsubscribe`를 숨기지 마세요.
+
+## 리스너 본문 규칙
+
+- 리스너 안에서 `getState()`로 읽습니다.
+- 작업은 작고 동기적으로 유지합니다.
+- 한 리스너의 실패가 뒤쪽 리스너를 막으면 안 된다면 예상 가능한 error를 리스너 안에서 잡습니다.
+- loop를 막는 guard가 명확하지 않다면 재귀적으로 `setState()`를 호출하지 않습니다.

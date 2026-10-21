@@ -1,0 +1,55 @@
+---
+title: "Subscription lifecycle"
+description: "Own subscribe cleanup across modules, components, and adapters."
+---
+
+# Subscription lifecycle
+
+A subscription is a resource. `subscribe()` adds a listener and returns the only cleanup function for that listener.
+
+## Module-level subscriptions
+
+Long-lived modules can subscribe once, but they still need a shutdown path.
+
+```ts lineNumbers
+let stopLogging: (() => void) | null = null;
+
+export function startLogging(): void {
+  if (stopLogging) return;
+  stopLogging = store.subscribe(() => {
+    console.debug("state", store.getState());
+  });
+}
+
+export function stopLoggingNow(): void {
+  stopLogging?.();
+  stopLogging = null;
+}
+```
+
+## Component or widget subscriptions
+
+For UI code, call `unsubscribe` in the component cleanup hook or widget destroy callback.
+
+```ts lineNumbers
+function mountWidget(node: HTMLElement): () => void {
+  const render = () => {
+    node.textContent = JSON.stringify(store.getState());
+  };
+
+  render();
+  const unsubscribe = store.subscribe(render);
+  return unsubscribe;
+}
+```
+
+## Avoid stale owner bugs
+
+Do not create a new subscription every render without cleaning up the old one. Do not hide `unsubscribe` in a place the owner cannot reach.
+
+## Listener body rules
+
+- Read with `getState()` inside the listener.
+- Keep work small and synchronous.
+- Catch expected errors inside the listener if one bad listener should not stop later listeners.
+- Avoid calling `setState()` recursively unless you have a clear guard against loops.

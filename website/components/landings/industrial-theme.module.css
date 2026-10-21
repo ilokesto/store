@@ -1,0 +1,39 @@
+.theme {
+  --paper: #efeee8;
+  --ink: #272d2a;
+  --muted: #62675e;
+  --code: #202622;
+  --code-ink: #edf0e8;
+  --accent: #ead7a2;
+  --comment: #b2b8a9;
+  --keyword: #dfb682;
+  --color-fd-background: var(--paper);
+  --color-fd-foreground: var(--ink);
+  --color-fd-card: var(--paper);
+  --color-fd-card-foreground: var(--ink);
+  --color-fd-primary: var(--ink);
+  --color-fd-primary-foreground: var(--paper);
+  --color-fd-muted: #dcded5;
+  --color-fd-muted-foreground: var(--muted);
+  --color-fd-accent: #dedfd7;
+  --color-fd-accent-foreground: var(--ink);
+  --color-fd-border: #272d2a30;
+  --color-fd-ring: var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+.overview {
+  composes: theme;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.overview button, .overview input { border-radius: 2px; }
+:global(.dark) .overview {
+  --paper: #242823;
+  --ink: #efede5;
+  --muted: #b8b9ac;
+  --color-fd-muted: #343a32;
+  --color-fd-accent: #3a4137;
+  --color-fd-border: #efede530;
+}

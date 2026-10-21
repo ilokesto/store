@@ -1,0 +1,120 @@
+name: Verify
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      expected_head_sha:
+        description: Exact immutable main or release-PR head SHA
+        required: true
+        type: string
+      release_pr_number:
+        description: Optional exact release PR number
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: verify-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate immutable event head before checkout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha || github.event.pull_request.head.sha || github.sha }}
+          RELEASE_PR_NUMBER: ${{ inputs.release_pr_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$GITHUB_REPOSITORY" == "ilokesto/store" ]] || exit 1
+          case "$EVENT_NAME" in
+            workflow_dispatch)
+              [[ "$GITHUB_SHA" == "$EXPECTED_HEAD_SHA" ]] || exit 1
+              if [[ -n "$RELEASE_PR_NUMBER" ]]; then
+                [[ "$RELEASE_PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || exit 1
+                [[ "$GITHUB_REF" == "refs/heads/changeset-release/main" ]] || exit 1
+                pr="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$RELEASE_PR_NUMBER")"
+                [[ "$(jq -r '.state' <<<"$pr")" == "open" ]] || exit 1
+                [[ "$(jq -r '.base.ref' <<<"$pr")" == "main" ]] || exit 1
+                [[ "$(jq -r '.head.ref' <<<"$pr")" == "changeset-release/main" ]] || exit 1
+                [[ "$(jq -r '.head.repo.full_name' <<<"$pr")" == "$GITHUB_REPOSITORY" ]] || exit 1
+                [[ "$(jq -r '.head.sha' <<<"$pr")" == "$EXPECTED_HEAD_SHA" ]] || exit 1
+                branch="changeset-release/main"
+              else
+                [[ "$GITHUB_REF" == "refs/heads/main" ]] || exit 1
+                branch="main"
+              fi
+              live="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$branch" --jq '.object.sha')"
+              [[ "$live" == "$EXPECTED_HEAD_SHA" ]] || exit 1
+              ;;
+            pull_request)
+              [[ "$EVENT_HEAD" == "$EXPECTED_HEAD_SHA" ]] || exit 1
+              ;;
+            push)
+              [[ "$GITHUB_REF" == "refs/heads/main" ]] || exit 1
+              [[ "$GITHUB_SHA" == "$EXPECTED_HEAD_SHA" ]] || exit 1
+              ;;
+            *) exit 1 ;;
+          esac
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_head_sha || github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check ordinary pull request release declarations
+        if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
+        run: pnpm changeset:status --since=origin/main
+      - run: pnpm --dir website exec playwright install --with-deps chromium
+      - name: Library and standalone checks
+        run: |
+          pnpm build
+          pnpm typecheck
+          pnpm test
+          pnpm test:typecheck
+          pnpm test:tooling
+          pnpm migrate:verify
+      - name: Documentation checks
+        run: |
+          pnpm docs:publication:verify
+          pnpm docs:typecheck
+          pnpm docs:build
+          pnpm docs:test
+      - name: Package exact verified head
+        run: node scripts/release-artifact.mjs "$VERIFIED_SHA"
+        env:
+          VERIFIED_SHA: ${{ inputs.expected_head_sha || github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-package-${{ inputs.expected_head_sha || github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/*
+          if-no-files-found: error
+  verify:
+    name: verify
+    if: always()
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require complete quality result
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        run: test "$QUALITY_RESULT" = success

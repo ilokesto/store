@@ -1,28 +1,21 @@
 # @ilokesto/store
 
-This directory contains the `@ilokesto/store` package in the ilokesto pnpm monorepo.
+This repository owns the framework-agnostic Store library and its private
+documentation website. Use Node 22 and pnpm 10.17.1 from this repository root.
 
-## What this package is
-
-A small, atomic, framework-agnostic state container with selector-driven subscriptions.
-
-## When modifying this package
-
-1. Read the root `AGENTS.md`, `PACKAGES.md`, and `ARCHITECTURE.md`.
-2. Load the `ilokesto-store` skill from `.opencode/skills/ilokesto-store/SKILL.md`.
-3. Keep the public API minimal. Major contract changes are recorded in `DECISIONS/005-state-foundation.md` and require a Changeset; do not apply versions or publish during implementation.
-4. Add tests in `src/index.test.ts` for new behavior.
-5. Run `pnpm typecheck`, `pnpm test`, and `pnpm build` before committing.
-6. Add a changeset with `pnpm changeset` for any consumer-facing change.
-
-## Release flow
-
-1. Open a PR with a root changeset.
-2. After CI passes on `main`, the root workflow's release job opens a `ci: release` PR.
-3. Merge the release PR to publish to npm.
-
-## Must not do
-
-- Do not add framework-specific code to this package.
-- Do not break dependent packages (`state`, `overlay`, `form`, `toast`) without a major version bump.
-- Do not publish manually without going through the Changesets workflow.
+- Keep the public API minimal and framework-agnostic; preserve compatibility.
+- Source, behavior tests, and type tests live in `src/` and `type-tests/`.
+- Canonical bilingual documentation is in `docs/`; the renderer is `website/`.
+- Keep version, exports, runtime behavior, and historical publication bytes intact.
+- Only this library and private workspaces in this repository may use workspace
+  links. Other ilokesto libraries are registry dependencies.
+- Run `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm test:typecheck`, and
+  `pnpm migrate:verify`, plus the four documentation quality commands in
+  `README.md`.
+- Repository setup alone does not require a Changeset. Consumer-facing changes
+  require a root Changeset.
+- Preserve `.migration/source-manifest.json`, original archive refs, and tag
+  objects. The migration verifier checks immutable history and current
+  standalone safety without freezing future HEAD, version, or API.
+- `release:verify --sha <full-SHA>` is read-only. Publishing remains disabled
+  by `.release/policy.json`; do not publish or deploy documentation here.

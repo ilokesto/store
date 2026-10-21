@@ -1,0 +1,30 @@
+---
+title: "Notification semantics"
+description: "Synchronous commits, FIFO snapshot delivery, and subscription ownership."
+---
+
+# Notification semantics
+
+## Commits and delivery
+
+Updates run through the current middleware chain. A value different by `Object.is` is committed immediately. The store captures that value and current subscriptions in a notification record, then drains records synchronously in FIFO order. No timers, microtasks, or batching are involved.
+
+An unchanged reference, a same-value updater, or middleware that does not call `next` produces no notification. Middleware runs in outer-to-inner order; ordinary delivery remains inside `next`, before middleware code following it.
+
+## Reentrant writes
+
+If a listener commits 2 while delivering 1, remaining selectors receive 1 before receiving 2. Selectors evaluate the captured state and receive next/previous selection arguments. `getState()` always reads the latest committed state, even while an older record is being delivered. Plain `subscribe` callbacks receive no arguments and are invalidation signals.
+
+New subscriptions do not receive records captured before registration. Unsubscribe is immediate and idempotent: an inactive subscription is skipped even if present in a captured record. Registering the same callback twice creates independent subscriptions.
+
+FIFO delivery avoids recursive stack growth; it does not prevent logically infinite update loops. Listener-driven updates still need a terminating condition.
+
+## Errors
+
+A selector error during registration propagates immediately and registers nothing. Errors from a selector, equality function, or listener during delivery are collected. Other active subscriptions and queued records still run. After draining, the outermost notification call throws an `AggregateError` containing original thrown values in order. The queue is cleared and remains usable for the next update.
+
+The state is already committed and is not rolled back. A failed selector/equality evaluation retains its previous selection baseline; a listener failure occurs after that baseline advances. Updater and middleware errors outside notification delivery propagate directly.
+
+## Explicit writes
+
+`set(value)` treats functions as values; `update(updater)` treats its argument as computation. Both use the same middleware chain as `setState(valueOrUpdater)`.

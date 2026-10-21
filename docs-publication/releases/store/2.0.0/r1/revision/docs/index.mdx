@@ -1,0 +1,55 @@
+---
+title: "Store"
+description: "Official documentation for @ilokesto/store, a small framework-neutral TypeScript state container."
+---
+
+# Store
+
+`@ilokesto/store` is a small TypeScript state container for one application-owned value. It gives you a `Store<T>` class, synchronous reads with `getState()`, replacement updates with `setState()`, change listeners with `subscribe()`, and an explicit middleware pipeline.
+
+Use it when you want a tiny state primitive that is independent of React, Vue, Svelte, Angular, or any other UI runtime. The package does not render UI, persist data, fetch from networks, or merge nested objects for you.
+
+<PackageDemo name="store" lang="en" />
+
+## Install
+
+```package-install
+@ilokesto/store
+```
+
+## What it gives you
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
+
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState().count);
+});
+
+counterStore.setState((prev) => ({ count: prev.count + 1 }));
+unsubscribe();
+```
+
+`setState()` replaces the stored value. If the resolved next value is `Object.is`-equal to the previous value, the store keeps the old value and does not notify listeners.
+
+## Choose Store or State
+
+Choose `@ilokesto/store` when plain TypeScript code should own a small value and you want to control reads, writes, and subscription cleanup directly. It is a good fit for domain state outside a component tree, framework adapter internals, and simple event-driven modules.
+
+Choose [`@ilokesto/state`](/en/state) when UI components need supported React, Vue, Svelte, Solid, or Angular bindings, or when you need reducers, persistence, validation, DevTools, history, or timed middleware. It builds those higher-level features on this package. Neither package provides async server caching, normalized entities, or distributed synchronization.
+
+## Documentation map
+
+- **Start:** [Quick start](/en/store/quick-start) builds and runs a small cart store; [Core concepts](/en/store/core-concepts) explains replacement updates and explicit subscriptions.
+- **Apply it:** [Small state](/en/store/guides/small-state), [Subscription lifecycle](/en/store/guides/subscription-lifecycle), and [Composing middleware](/en/store/guides/composing-middleware) cover common tasks.
+- **Look up behavior:** [Store and contracts](/en/store/reference/store), [setState](/en/store/reference/set-state), [subscribe](/en/store/reference/subscribe), and [middleware](/en/store/reference/middleware) document the exact API.
+- **Connect a framework yourself:** the Integration pages show minimal React, Vue, Svelte, Solid, and Angular adapters. Prefer [`@ilokesto/state`](/en/state) when you want maintained adapters instead.
+- **Diagnose edge cases:** [Notification semantics](/en/store/advanced/notification-semantics) covers ordering and failures; [Troubleshooting](/en/store/troubleshooting) covers common mistakes.
+
+## Version and source basis
+
+The site version selector identifies the exact package release documented here. The API reference describes the package surface shipped for that release, including `createStore`, structural store contracts, explicit `set`/`update`, FIFO delivery, selector subscriptions, and aggregated listener errors.

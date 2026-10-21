@@ -1,0 +1,68 @@
+---
+title: "React"
+description: "Connect @ilokesto/store to React with useSyncExternalStore."
+---
+
+# React
+
+React's `useSyncExternalStore` is the right adapter point for `@ilokesto/store`. It asks for a stable `subscribe` function, a `getSnapshot` function, and optionally a server snapshot for SSR.
+
+## Create a hook from a store
+
+```tsx lineNumbers
+import { useSyncExternalStore } from "react";
+import { Store } from "@ilokesto/store";
+
+export function createStoreHook<T>(store: Store<T>) {
+  const subscribe = (onStoreChange: () => void) => {
+    return store.subscribe(onStoreChange);
+  };
+
+  const getSnapshot = () => store.getState();
+  const getServerSnapshot = () => store.getInitialState();
+
+  return function useStoreSnapshot(): Readonly<T> {
+    return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  };
+}
+```
+
+Create the hook once, near the store definition. Do not create `subscribe` inside every component render; React may resubscribe when the function identity changes.
+
+## Use it in a component
+
+```tsx lineNumbers
+type CounterState = { count: number };
+
+export const counterStore = new Store<CounterState>({ count: 0 });
+export const useCounter = createStoreHook(counterStore);
+
+export function CounterButton() {
+  const counter = useCounter();
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        counterStore.setState((prev) => ({ count: prev.count + 1 }))
+      }
+    >
+      Count: {counter.count}
+    </button>
+  );
+}
+```
+
+## Snapshot rules
+
+React compares snapshots with `Object.is`. `@ilokesto/store` also skips notification when the resolved state is `Object.is`-equal to the previous state. Treat snapshots as immutable and always return a new object or array when something changes.
+
+```ts
+counterStore.setState((prev) => ({ count: prev.count + 1 }));
+```
+
+Avoid mutating in place and returning the same object. React will not see a different snapshot, and the store will not notify subscribers.
+
+## SSR note
+
+The `getServerSnapshot` example returns `getInitialState()`. That is safe when the server and client both start from the same initial value. If your server sends request-specific state, serialize that same value to the client and make `getServerSnapshot` return it during hydration.
