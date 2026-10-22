@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && next build",
-    "dev": "node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && next dev",
-    "start": "next start",
-    "typecheck": "node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && fumadocs-mdx && next typegen && tsc --noEmit",
+    "build": "node ../scripts/materialize-inter-fonts.mjs && node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && next build",
+    "dev": "node ../scripts/materialize-inter-fonts.mjs && node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && next dev",
+    "start": "node ../scripts/materialize-inter-fonts.mjs && next start",
+    "typecheck": "node ../scripts/materialize-inter-fonts.mjs && node ../scripts/docs-publication.mjs generate && node ../scripts/docs-runtime.mjs verify && fumadocs-mdx && next typegen && tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "postinstall": "node ../scripts/docs-publication.mjs generate && fumadocs-mdx"
   },

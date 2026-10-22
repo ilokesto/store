@@ -1,10 +1,5 @@
 import './global.css';
-import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
-
-const inter = Inter({
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ilokesto.ayden94.com'),
@@ -20,10 +15,17 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
-        {children}
-      </body>
+    <html lang="en" className="inter-font" suppressHydrationWarning>
+      <head>
+        <link
+          rel="preload"
+          href="/fonts/inter-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body className="flex flex-col min-h-screen">{children}</body>
     </html>
   );
 }

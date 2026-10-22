@@ -45,7 +45,8 @@ pnpm docs:test
 
 The website tests start a production server and exercise Store navigation,
 search, Markdown, Open Graph images, responsive demo layout, and the actual
-interactive counter in Chromium. The build uses the existing Google Inter font.
+interactive counter in Chromium. Verified Inter variable-font subsets are
+bundled with the website, so builds do not fetch fonts from Google.
 The generated documentation site is local-only during this migration; do not
 change hosting or deploy it.
 
