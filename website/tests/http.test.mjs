@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 import { expect } from '@playwright/test';
 import publication from '../../docs-publication/active.json' with { type: 'json' };
+import interFonts from '../assets/inter-fonts.json' with { type: 'json' };
 import { demoBehaviors } from './demo-behaviors.mjs';
 import { currentDemoBehaviors } from './current-demo-behaviors.mjs';
 import { createDocsSite } from './http-fixture.mjs';
@@ -10,6 +12,18 @@ import { createDocsSite } from './http-fixture.mjs';
 const site = createDocsSite();
 const request = site.request;
 const packages = Object.keys(publication.packages);
+
+for (const face of interFonts.faces) {
+  test(`bundled Inter ${face.subset} is served byte-for-byte without redirects`, async () => {
+    const response = await request(`/fonts/inter-${face.subset}.woff2`);
+    assert.equal(response.status, 200, face.subset);
+    assert.equal(response.redirected, false, face.subset);
+    assert.match(response.headers.get('content-type'), /font\/woff2/, face.subset);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.equal(bytes.length, face.bytes, face.subset);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), face.sha256, face.subset);
+  });
+}
 
 for (const lang of ['en', 'ko']) {
   test(`${lang} homepage switches its shared palette in dark mode`, async () => {
