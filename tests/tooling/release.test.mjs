@@ -122,6 +122,19 @@ test('release verification: real pack and exact downloaded artifact -> read-only
   assert.equal(fixture.state.mainReads, 2);
 });
 
+test('packRelease: real pnpm archive -> stable gzip header and saved bytes', async t => {
+  const fixture = await releaseFixture(t);
+  const artifacts = path.join(path.dirname(fixture.root), 'pack-regression');
+  await mkdir(artifacts);
+
+  const packed = await packRelease(fixture.root, artifacts);
+  const saved = await readFile(path.join(artifacts, packed.file));
+
+  assert.equal(packed.bytes[9], 3);
+  assert.deepEqual(packed.bytes, saved);
+  assert.equal(packed.packSha256, hash(saved));
+});
+
 test('release verification: main advances after packing -> no stale eligibility', async t => {
   const fixture = await releaseFixture(t);
   fixture.state.advance = true;
