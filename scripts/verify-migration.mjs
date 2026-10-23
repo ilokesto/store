@@ -309,25 +309,57 @@ export async function verifyCheckpoint(repo, manifest) {
 
 export async function verifyStandalone(repo, manifest) {
   validateManifest(manifest);
+  repo = await realpath(repo);
+  const withinRepo = target => {
+    const relative = path.relative(repo, target);
+    return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+  };
+  const localTarget = async (file, range, code = 'EXTERNAL_DEPENDENCY_PATH') => {
+    // Match pnpm's local resolver: normalize protocol slashes, not URI escapes.
+    const spec = range.replace(/\\/g, '/').replace(/^(?:file|link|workspace):\/*([A-Z]:)/i, '$1')
+      .replace(/^(?:file|link|workspace):(?:\/*([~./]))?/, '$1');
+    const target = path.resolve(path.dirname(path.join(repo, file)), spec);
+    invariant(!/^(?:\/|[A-Z]:|~\/)/i.test(spec) && withinRepo(target), code, `${file} ${range}`);
+    const resolved = await realpath(target);
+    invariant(withinRepo(resolved), code, `${file} ${range}`);
+    return resolved;
+  };
+  invariant(withinRepo(await realpath(path.join(repo, 'package.json'))), 'EXTERNAL_REPOSITORY_PATH', 'package.json');
   const root = JSON.parse(await readFile(path.join(repo, 'package.json'), 'utf8'));
   invariant(root.name === `@ilokesto/${manifest.package}`, 'PACKAGE_IDENTITY', root.name);
   if (manifest.package === 'queryable') {
     invariant(root.private === true, 'PRIVATE_PACKAGE_EXPOSED', root.name);
   }
-  const files = lines((await git(repo, ['ls-files', '-z'])).toString().replaceAll('\0', '\n'));
-  const manifests = [...new Set(['package.json', ...files.filter(file => file.endsWith('/package.json')
-    && !file.startsWith('docs-publication/releases/') && !file.startsWith('.migration/')
-    && !file.includes('/.generated/') && !file.startsWith('tests/'))])];
-  const localPackages = new Map();
-  for (const file of manifests) {
-    const current = JSON.parse(await readFile(path.join(repo, file), 'utf8'));
-    if (file === 'package.json' || current.private === true) {
-      invariant(!localPackages.has(current.name), 'DUPLICATE_WORKSPACE_NAME', current.name);
-      localPackages.set(current.name, { file, private: current.private === true });
+  const files = (await git(repo, ['ls-files', '--cached', '--others', '--exclude-standard', '-z'])).toString().split('\0').filter(Boolean);
+  const generated = new Set(['node_modules', 'dist', '.next', '.source', '.generated']);
+  const manifests = new Map();
+  for (const file of new Set(['package.json', ...files])) {
+    if (file.startsWith('docs-publication/releases/') || file.startsWith('.migration/')
+      || file.split('/').some(part => generated.has(part))) {
+      continue;
+    }
+    const location = path.join(repo, file);
+    if (!await exists(location)) {
+      continue;
+    }
+    invariant(withinRepo(await realpath(location)), 'EXTERNAL_REPOSITORY_PATH', file);
+    if (file === 'package.json' || file.endsWith('/package.json')) {
+      manifests.set(file, file === 'package.json' ? root : JSON.parse(await readFile(location, 'utf8')));
     }
   }
-  for (const file of manifests) {
-    const current = file === 'package.json' ? root : JSON.parse(await readFile(path.join(repo, file), 'utf8'));
+  const localPackages = new Map();
+  for (const [file, current] of manifests) {
+    invariant(current.name === root.name || !SLUGS.some(slug => current.name === `@ilokesto/${slug}`),
+      'SIBLING_DEPENDENCY', `${file} ${current.name}`);
+    if (file === 'package.json' || current.private === true) {
+      invariant(!localPackages.has(current.name), 'DUPLICATE_WORKSPACE_NAME', current.name);
+      localPackages.set(current.name, {
+        private: current.private === true,
+        directory: path.dirname(await realpath(path.join(repo, file))),
+      });
+    }
+  }
+  for (const [file, current] of manifests) {
     for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
       for (const [name, range] of Object.entries(current[section] ?? {})) {
         invariant(typeof range === 'string', 'INVALID_DEPENDENCY', `${file} ${name}`);
@@ -335,12 +367,24 @@ export async function verifyStandalone(repo, manifest) {
           || (name !== '@ilokesto/queryable' && !/^npm:@ilokesto\/queryable@/.test(range)),
         'PRIVATE_PACKAGE_DEPENDENCY', `${file} ${name}`);
         if (range.startsWith('workspace:')) {
-          const local = localPackages.get(name);
+          const [, alias, requested] = /^workspace:(?:([^._/][^@]*)@)?(.*)$/.exec(range);
+          let targetName = alias ?? name;
+          let local = localPackages.get(targetName);
+          if (range.startsWith('workspace:.')) {
+            const target = await localTarget(file, range, 'SIBLING_DEPENDENCY');
+            [targetName, local] = [...localPackages].find(([, candidate]) => candidate.directory === target) ?? [];
+          } else {
+            invariant(!/[\\/:@]/.test(requested), 'SIBLING_DEPENDENCY', `${file} ${name} ${range}`);
+          }
           invariant(file !== 'package.json' && current.private === true && local
-            && (name === root.name || (local.private && !SLUGS.includes(name.slice('@ilokesto/'.length)))),
+            && (targetName === root.name || (local.private && !SLUGS.includes(targetName.slice('@ilokesto/'.length)))),
           'SIBLING_DEPENDENCY', `${file} ${name} ${range}`);
         }
-        invariant(!/^(?:file|link):(?:\/|\.\.\/)/.test(range), 'EXTERNAL_DEPENDENCY_PATH', `${file} ${name}`);
+        if (/^(?:file|link):/.test(range)) {
+          await localTarget(file, range);
+          invariant(!SLUGS.some(slug => name === `@ilokesto/${slug}` && name !== root.name),
+            'SIBLING_DEPENDENCY', `${file} ${name} ${range}`);
+        }
       }
     }
     const scripts = JSON.stringify(current.scripts ?? {});
@@ -357,7 +401,7 @@ export async function verifyStandalone(repo, manifest) {
       invariant(!/\b(?:npm|pnpm)\s+publish\b|changesets\/action/.test(await readFile(path.join(repo, file), 'utf8')), 'PRIVATE_PUBLISH_WORKFLOW', file);
     }
   }
-  return { mode: 'standalone', package: root.name, manifests: manifests.length };
+  return { mode: 'standalone', package: root.name, manifests: manifests.size };
 }
 
 export function verifyRelease(input) {
