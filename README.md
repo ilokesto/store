@@ -1,256 +1,81 @@
 # @ilokesto/store
 
-**English** | [한국어](./README.ko.md)
+A small, framework-independent TypeScript store for immutable state and selector subscriptions.
 
-A small and simple TypeScript Store class.
+[![npm](https://img.shields.io/npm/v/@ilokesto/store?style=flat&color=555)](https://www.npmjs.com/package/@ilokesto/store)
+![MIT](https://img.shields.io/badge/license-MIT-555?style=flat)
 
-This package serves as a **vanilla store core** for building React state management libraries. It provides state storage, updates, and subscription features without any React dependencies.
+[Docs](./docs/index.mdx) | [API](./docs/reference/store.mdx) | [한국어](./README.ko.md)
 
-
-## Documentation
-
-- Full docs: [English](https://ilokesto.ayden94.com/en/store) · [한국어](https://ilokesto.ayden94.com/ko/store)
-- Source: [ilokesto/store](https://github.com/ilokesto/store)
-- npm: [@ilokesto/store](https://www.npmjs.com/package/@ilokesto/store)
-
-## Foundation
-
-Use `createStore(value)`, `store.set(value)`, and `store.update(updater)`. Exported `ReadableStore<T>` and `StoreApi<T>` describe structural integrations without private class fields. The `Store` class and its prototype methods remain available.
-
-Notifications use synchronous FIFO commit snapshots. Unsubscribe cancels pending delivery immediately, duplicate callback registrations are independent, and listener failures are collected into an `AggregateError` after draining. Read the [notification contract](docs/advanced/notification-semantics.mdx) for the full semantics.
-
-Integrations can use `Store.subscribeCommit(listener)` to observe captured
-`{ state, previousState, sequence, source }` records and `getCommitSequence()` to
-detect intervening changes. `replaceState(value, source?)` commits a literal value
-immediately, bypassing middleware but using the same notification engine. These
-capabilities belong to `Store`; the structural `StoreApi` contract is unchanged.
-
-## Features
-
-- Generic-based `Store<T>`
-- Get current state: `getState()`
-- Get initial state: `getInitialState()`
-- Update state with value or updater function: `setState()`
-- Register middleware: `pushMiddleware()` / `unshiftMiddleware()`
-- Subscribe / Unsubscribe: `subscribe()`
-- Subscribe to a derived selection: `subscribeSelector(selector, listener, equalityFn?)`
-- Skips notifications when updated with the same reference
-- Skips selector notifications when the selected value is considered equal
-- Safely iterates listeners even if unsubscriptions occur during notification
+- Create typed stores with `createStore()` or `Store<T>`.
+- Subscribe to the whole state or a selection, with explicit cleanup and equality.
+- Compose middleware around writes without a framework runtime dependency.
 
 ## Installation
 
-```bash
+```sh
 pnpm add @ilokesto/store
 ```
 
-or
+Or use `npm install @ilokesto/store`. The package ships ESM and TypeScript declarations.
 
-```bash
-npm install @ilokesto/store
-```
+## Quick start
 
-## Basic Usage
+Create a counter, observe its count, then release the subscription:
 
 ```ts
-import { Store } from "@ilokesto/store";
+import { createStore } from '@ilokesto/store';
 
 type CounterState = {
   count: number;
 };
 
-const counterStore = new Store<CounterState>({ count: 0 });
+const counter = createStore<CounterState>({ count: 0 });
 
-const unsubscribe = counterStore.subscribe(() => {
-  console.log("changed:", counterStore.getState());
-});
-
-counterStore.setState({ count: 1 });
-counterStore.setState((prev) => ({ count: prev.count + 1 }));
-
-console.log(counterStore.getInitialState());
-console.log(counterStore.getState());
-
-unsubscribe();
-```
-
-## API
-
-### `new Store<T>(initialState: T)`
-
-Creates a Store instance with the initial state.
-
-```ts
-const store = new Store({ count: 0 });
-```
-
-### `store.getState(): Readonly<T>`
-
-Returns a snapshot of the current state.
-
-```ts
-const state = store.getState();
-```
-
-### `store.getInitialState(): Readonly<T>`
-
-Returns the initial state provided when the Store was created.
-
-```ts
-const initialState = store.getInitialState();
-```
-
-### `store.setState(nextState: SetStateAction<T>): void`
-
-Replaces the state with a new value or computes the next state based on the previous one.
-
-```ts
-store.setState({ count: 10 });
-
-store.setState((prev) => ({
-  count: prev.count + 1,
-}));
-```
-
-It does not notify subscribers if `Object.is(prevState, nextState)` is `true`.
-
-Functions passed to `setState()` are always treated as updaters. As a result, the current API is not suitable for patterns where the state value itself is a function.
-
-### `store.pushMiddleware(middleware: (nextState: SetStateAction<T>, next: Dispatch<SetStateAction<T>>) => void): void`
-
-Adds a middleware to the end of the chain. Middlewares wrap the `setState` operation and run in the order they were registered.
-
-```ts
-store.pushMiddleware((nextState, next) => {
-  console.log("Before update:", nextState);
-  next(nextState);
-  console.log("After update");
-});
-```
-
-### `store.unshiftMiddleware(middleware: (nextState: SetStateAction<T>, next: Dispatch<SetStateAction<T>>) => void): void`
-
-Adds a middleware to the beginning of the chain. Use this when you need a middleware to run before previously registered ones.
-
-```ts
-store.unshiftMiddleware((nextState, next) => {
-  console.log("Outermost middleware");
-  next(nextState);
-});
-```
-
-A middleware receives the `nextState: SetStateAction<T>` and a `next: Dispatch<SetStateAction<T>>` function to continue the chain. The first middleware in the array becomes the outermost wrapper, so a `before -> next -> after` pattern runs like nested function calls around the final state application. The final `next` call applies the state and notifies subscribers.
-
-### `store.subscribe(listener: () => void): () => void`
-
-Registers a listener to be executed when the state changes. Returns an unsubscribe function.
-
-```ts
-const unsubscribe = store.subscribe(() => {
-  console.log("state changed");
-});
-
-unsubscribe();
-```
-
-### `store.subscribeSelector<Selection>(selector, listener, equalityFn?): () => void`
-
-Subscribes to a derived slice of state instead of the whole store. `subscribeSelector` is a distinct method from `subscribe(listener)`; it does not change the signature of `subscribe`, which keeps `override subscribe(...)` working in subclasses. The listener is **not** invoked immediately when you call `subscribeSelector()`. It runs only when the store updates and the selected value changes.
-
-```ts
-type User = { id: string; name: string };
-type UserState = { user: User; revision: number };
-
-const userStore = new Store<UserState>({
-  user: { id: "1", name: "Ada" },
-  revision: 0,
-});
-
-const unsubscribe = userStore.subscribeSelector(
-  (state) => state.user,
-  (nextUser, previousUser) => {
-    console.log("user changed:", previousUser.name, "->", nextUser.name);
-  }
-);
-
-userStore.setState((prev) => ({
-  ...prev,
-  user: { ...prev.user, name: "Grace" },
-  revision: prev.revision + 1,
-}));
-
-unsubscribe();
-```
-
-The listener receives `(nextSelection, previousSelection)`. Use `next` to read the new slice and `previous` to compare against what it was before.
-
-Equality defaults to `Object.is`. Pass a custom `equalityFn(previous, next)` when the selected value is a fresh reference each time but should still be treated as unchanged (for example, a user object with the same `id`):
-
-```ts
-const unsubscribe = userStore.subscribeSelector(
-  (state) => state.user,
-  (nextUser) => {
-    console.log("user identity changed:", nextUser.id);
+const unsubscribe = counter.subscribeSelector(
+  state => state.count,
+  (next, previous) => {
+    console.log(`${previous} -> ${next}`);
   },
-  (previousUser, nextUser) => previousUser.id === nextUser.id
 );
+
+counter.set({ count: 1 });
+counter.update(previous => ({ count: previous.count + 1 }));
+
+console.log(counter.getInitialState()); // { count: 0 }
+console.log(counter.getState()); // { count: 2 }
+
+unsubscribe();
 ```
 
-If `Object.is` (or your `equalityFn`) considers the previous and next selections equal, the listener is skipped for that update, even when the underlying state reference changed. This is how you avoid re-rendering on a state change that did not actually affect the slice you care about.
+Treat snapshots as immutable: return a fresh object or array when updating.
+`Object.is` skips unchanged state; selector equality also defaults to `Object.is`.
+Registration evaluates the selector but does not call its listener immediately.
 
-Selector subscriptions are plain listeners under the hood, so they follow the same rules as the single-argument form: they run after the state is stored, they do not run when `setState()` resolves to the same reference, and they are removed by calling the returned unsubscribe function.
+Framework hooks, persistence helpers, and DevTools integrations belong to higher layers.
 
-The selector runs once during `subscribeSelector()` to seed `previousSelection`. A throw at registration escapes the `subscribeSelector()` call and the listener is never added to the store. Wrap registration-time selector work in a try/catch if the slice may be temporarily invalid.
+Use `set(value)` for literal values, including functions, and `update(updater)` for
+computation. `setState(fn)` always treats its function argument as an updater.
 
-After every top-level state change that reaches notification, the selector runs again to compute `nextSelection`, then the equality function runs against `previousSelection` and `nextSelection`. The listener runs only when the equality function reports a change; otherwise the notification cycle for this subscription ends there. The store collects errors during delivery, finishes other active subscriptions and queued notifications, then throws an `AggregateError` containing the original failures. Keep the selector, equality function, and listener small, or catch expected errors inside the listener.
+Notifications drain synchronously in FIFO order using captured commits. Listener
+failures are collected into an `AggregateError` after delivery; committed state is
+not rolled back. The notification contract below covers reentrant writes,
+independent registrations, immediate unsubscribe, and commit-aware integrations.
 
-## State Semantics
+## Further reading
 
-This Store treats state as **immutable snapshots**.
+- [State snapshots and immutable updates](./docs/core-concepts.mdx)
+- [Value replacement and updater semantics](./docs/reference/set-state.mdx)
+- [Subscriptions, selectors, equality, and cleanup](./docs/reference/subscribe.mdx)
+- [Composing middleware](./docs/guides/composing-middleware.mdx)
+- [Notification contract and commit observers](./docs/advanced/notification-semantics.mdx)
 
-- Always update state via `setState()` instead of modifying it directly.
-- Update object or array states by returning a new reference.
-- Providing the same reference will not be considered a change.
+<details>
+<summary>Development</summary>
 
-Recommended:
+Use Node 22 and pnpm 10.17.1. Run these commands from this repository root:
 
-```ts
-store.setState((prev) => ({
-  ...prev,
-  count: prev.count + 1,
-}));
-```
-
-Not recommended:
-
-```ts
-store.setState((prev) => {
-  prev.count += 1;
-  return prev;
-});
-```
-
-## Current Scope
-
-This package currently handles only the following:
-
-- State storage
-- State replacement
-- Subscription management
-- Selector-based subscriptions with optional equality function
-- Middleware support
-
-It does not yet include:
-
-- React hooks
-- DevTools integration
-- Persistence helpers
-
-This package is a minimal core rather than a full featured React state management library.
-
-## Development
-
-```bash
+```sh
 pnpm install --frozen-lockfile
 pnpm build
 pnpm typecheck
@@ -264,9 +89,11 @@ pnpm docs:build
 pnpm docs:test
 ```
 
-The package requires Node 22 and pnpm 10.17.1. Build outputs are generated in
-`dist`; the private documentation site runs locally with `pnpm docs:start`.
+Build output goes to `dist/`. After building the private documentation site,
+`pnpm docs:start` serves it locally. Canonical bilingual content lives in `docs/`;
+`website/` owns the renderer.
 
-## License
+Keep immutable publication archives and migration history intact. Publishing
+remains disabled by `.release/policy.json`; do not publish locally or deploy docs.
 
-MIT
+</details>
