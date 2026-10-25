@@ -1,0 +1,3 @@
+# Keep documentation and Node tooling out of GitHub language statistics.
+*.mdx linguist-detectable=false
+*.mjs linguist-detectable=false
