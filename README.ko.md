@@ -94,6 +94,9 @@ pnpm docs:test
 렌더러는 `website/`에 있습니다.
 
 변경 불가능한 문서 기록과 마이그레이션 이력을 보존하세요.
-`.release/policy.json`에 따라 게시가 비활성화되어 있으며 로컬 게시나 문서 배포는 하지 않습니다.
+PR에서는 Verify를 실행하고 main 변경 시 Changesets 릴리스 PR을 생성·갱신합니다.
+릴리스 PR을 머지하면 해당 main 커밋의 Verify 성공 후 검증된 패키지를 npm에 게시합니다.
+적용 전에 Actions의 PR 생성 권한과 Production 환경의 `NPM_TOKEN`을 설정하세요.
+로컬 게시나 문서 배포는 하지 않습니다.
 
 </details>

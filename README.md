@@ -93,7 +93,10 @@ Build output goes to `dist/`. After building the private documentation site,
 `pnpm docs:start` serves it locally. Canonical bilingual content lives in `docs/`;
 `website/` owns the renderer.
 
-Keep immutable publication archives and migration history intact. Publishing
-remains disabled by `.release/policy.json`; do not publish locally or deploy docs.
+Keep immutable publication archives and migration history intact. Pull requests
+run Verify; main updates create or refresh the Changesets release PR. Merging
+that release PR publishes its exact verified main artifact to npm after Verify
+succeeds. Enable Actions PR creation and provide `NPM_TOKEN` to the Production
+environment before rollout. Do not publish locally or deploy docs.
 
 </details>

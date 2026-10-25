@@ -1,6 +1,10 @@
 name: Publish
 
 on:
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_sha:
@@ -15,18 +19,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Select only a merged release PR at the current main head
+        id: release
+        env:
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha || inputs.release_sha }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'publish=false\n' >> "$GITHUB_OUTPUT"
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$GITHUB_REPOSITORY" == "ilokesto/store" ]] || exit 1
+          [[ "$GITHUB_REF" == "refs/heads/main" ]] || exit 1
+          live="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$live" != "$RELEASE_SHA" ]]; then
+            echo "::notice::Skipping a superseded main commit"
+            exit 0
+          fi
+          prs="$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/commits/$RELEASE_SHA/pulls?per_page=100")"
+          if jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$RELEASE_SHA" \
+            'add | any(.merged_at != null and .merge_commit_sha == $sha and
+              .base.ref == "main" and .base.repo.full_name == $repo and
+              .head.ref == "changeset-release/main" and .head.repo.full_name == $repo)' \
+            <<< "$prs" > /dev/null; then
+            printf 'publish=true\nsha=%s\n' "$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+          fi
   publish:
-    # Bootstrap is disabled in both this workflow and the checked-in policy.
-    if: ${{ false }}
+    needs: plan
+    if: needs.plan.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment: Production
     permissions:
       contents: write
       actions: read
+    env:
+      RELEASE_SHA: ${{ needs.plan.outputs.sha }}
     steps:
       - name: Bind dispatch before checkout
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          RELEASE_SHA: ${{ needs.plan.outputs.sha }}
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -38,7 +84,7 @@ jobs:
           [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" == "$RELEASE_SHA" ]] || exit 1
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_sha }}
+          ref: ${{ needs.plan.outputs.sha }}
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -55,7 +101,7 @@ jobs:
       - name: Publish only the exact Verify artifact after live revalidation
         run: node scripts/publish-verified.mjs "$RELEASE_SHA"
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          RELEASE_SHA: ${{ needs.plan.outputs.sha }}
           GH_TOKEN: ${{ github.token }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
