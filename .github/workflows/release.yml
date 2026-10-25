@@ -12,11 +12,11 @@ concurrency:
 
 jobs:
   release:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +31,7 @@ jobs:
       - name: Require explicit release-PR enablement
         run: node -e "const p=require('./.release/policy.json'); if (!p.releasePrEnabled) process.exit(1)"
       - name: Create or update release PR without publishing
+        id: changesets
         uses: changesets/action@v1
         with:
           version: pnpm version-packages
@@ -38,3 +39,13 @@ jobs:
           title: "ci: release"
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - name: Verify the generated release PR
+        if: steps.changesets.outputs.pullRequestNumber != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PR_NUMBER: ${{ steps.changesets.outputs.pullRequestNumber }}
+        run: |
+          set -euo pipefail
+          head="$(gh pr view "$RELEASE_PR_NUMBER" --json headRefOid --jq .headRefOid)"
+          gh workflow run ci.yml --ref changeset-release/main \
+            -f expected_head_sha="$head" -f release_pr_number="$RELEASE_PR_NUMBER"

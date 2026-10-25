@@ -186,19 +186,21 @@ test('CI dispatch: main, PR, moving head, and foreign repository -> exact gate s
   assert.equal(changesets.if, "github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'");
 });
 
-test('publisher bootstrap: workflow and executable policy -> no publish path reachable', async () => {
+test('publisher boundary: automated release policy -> local publication rejected', async () => {
   const policy = JSON.parse(await readFile(path.join(rootDir, '.release/policy.json'), 'utf8'));
   const publish = parse(await readFile(path.join(rootDir, '.github/workflows/publish.yml'), 'utf8'));
   const release = parse(await readFile(path.join(rootDir, '.github/workflows/release.yml'), 'utf8'));
-  assert.equal(policy.publishingEnabled, false);
-  assert.equal(policy.releasePrEnabled, false);
+  assert.equal(policy.publishingEnabled, true);
+  assert.equal(policy.releasePrEnabled, true);
   assert.equal(policy.distTag, 'latest');
   assert.equal(publish.on.workflow_dispatch.inputs.release_sha.required, true);
-  assert.equal(publish.jobs.publish.if, '${{ false }}');
-  assert.equal(release.jobs.release.if, '${{ false }}');
+  assert.equal(publish.jobs.publish.if, "needs.plan.outputs.publish == 'true'");
+  assert.equal(release.jobs.release.if, undefined);
   assert.ok(!release.jobs.release.steps.some(step => step.with?.publish));
-  assert.equal(publish.jobs.publish.steps[1].with.ref, '${{ inputs.release_sha }}');
-  const result = spawnSync(process.execPath, ['scripts/publish-verified.mjs', sha], { cwd: rootDir, encoding: 'utf8' });
+  assert.equal(publish.jobs.publish.steps[1].with.ref, '${{ needs.plan.outputs.sha }}');
+  const result = spawnSync(process.execPath, ['scripts/publish-verified.mjs', sha], {
+    cwd: rootDir, encoding: 'utf8', env: { ...process.env, GITHUB_ACTIONS: 'false' },
+  });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /BOOTSTRAP_PUBLISHING_DISABLED/);
+  assert.match(result.stderr, /LOCAL_PUBLISH_FORBIDDEN/);
 });

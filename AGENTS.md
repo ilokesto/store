@@ -17,5 +17,6 @@ documentation website. Use Node 22 and pnpm 10.17.1 from this repository root.
 - Preserve `.migration/source-manifest.json`, original archive refs, and tag
   objects. The migration verifier checks immutable history and current
   standalone safety without freezing future HEAD, version, or API.
-- `release:verify --sha <full-SHA>` is read-only. Publishing remains disabled
-  by `.release/policy.json`; do not publish or deploy documentation here.
+- `release:verify --sha <full-SHA>` is read-only. Main updates maintain the
+  Changesets release PR; its merge publishes only the exact successful Verify
+  artifact through GitHub Actions. Never publish locally or deploy documentation.
