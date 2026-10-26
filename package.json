@@ -1,6 +1,9 @@
 {
   "name": "@ilokesto/store",
   "version": "2.0.1",
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

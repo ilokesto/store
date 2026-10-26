@@ -1,7 +1,7 @@
 # @ilokesto/store
 
 This repository owns the framework-agnostic Store library and its private
-documentation website. Use Node 22 and pnpm 10.17.1 from this repository root.
+documentation website. Use Node 24.22.1 and pnpm 10.17.1 from this repository root.
 
 - Keep the public API minimal and framework-agnostic; preserve compatibility.
 - Source, behavior tests, and type tests live in `src/` and `type-tests/`.

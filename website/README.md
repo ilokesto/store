@@ -1,7 +1,7 @@
 # @ilokesto/store documentation
 
 This private Next.js 16 / Fumadocs application belongs to the standalone Store
-repository. Use Node.js 22 and pnpm 10.17.1 from the repository root.
+repository. Use Node.js 24.22.1 and pnpm 10.17.1 from the repository root.
 
 ## Development
 
