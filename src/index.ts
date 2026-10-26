@@ -9,6 +9,10 @@ import {
 export { batch } from "./batch.js";
 export { derived } from "./derived.js";
 export type { DerivedOptions, SourceValues } from "./derived.js";
+export { focus } from "./focus.js";
+export type { WritableFocus } from "./focus.js";
+export { createStoreFamily } from "./createStoreFamily.js";
+export type { StoreFamily, StoreFamilyOptions } from "./createStoreFamily.js";
 export { memoizeSelector } from "./memoizeSelector.js";
 export type { MemoizedSelector, MemoizeSelectorOptions } from "./memoizeSelector.js";
 export { withLifecycle } from "./withLifecycle.js";
