@@ -1,3 +1,23 @@
+import {
+  deferNotification,
+  getBatchSequence,
+  hasDeferredNotifications,
+  NotificationError,
+  runNotifications,
+} from "./batch.js";
+
+export { batch } from "./batch.js";
+export { derived } from "./derived.js";
+export type { DerivedOptions, SourceValues } from "./derived.js";
+export { memoizeSelector } from "./memoizeSelector.js";
+export type { MemoizedSelector, MemoizeSelectorOptions } from "./memoizeSelector.js";
+export { withLifecycle } from "./withLifecycle.js";
+export type {
+  DisposableReadableStore,
+  LifecycleScope,
+  LifecycleStart,
+} from "./withLifecycle.js";
+
 /**
  * Receives an invalidation without arguments; read the latest state separately.
  * @example
@@ -136,6 +156,13 @@ type Notification<T> = {
   readonly subscriptions: readonly Subscription<T>[];
   readonly commit: StoreCommit<T>;
   readonly observers: readonly CommitSubscription<T>[];
+  readonly batchSequence: number | undefined;
+};
+
+type BatchedNotification<T> = {
+  state: T;
+  readonly subscriptions: Set<Subscription<T>>;
+  readonly batchSequence?: number;
 };
 
 type CommitSubscription<T> = {
@@ -169,6 +196,7 @@ export class Store<T> implements StoreApi<T> {
   private cachedRunner: Dispatch<SetStateAction<T>> | null = null;
   private sequence = 0;
   private readonly commitObservers = new Set<CommitSubscription<T>>();
+  private batchedNotification: BatchedNotification<T> | undefined;
 
   /**
    * Stores the initial value as-is, including callable values.
@@ -383,16 +411,34 @@ export class Store<T> implements StoreApi<T> {
         source,
       },
       observers: [...this.commitObservers],
+      batchSequence: getBatchSequence(),
     });
     this.flushNotifications();
   }
 
-  private flushNotifications(): void {
+  private flushNotifications(initial?: BatchedNotification<T>): void {
     if (this.notifying) return;
 
+    runNotifications(() => this.deliverNotifications(initial));
+  }
+
+  private deliverNotifications(initial?: BatchedNotification<T>): void {
     this.notifying = true;
     const errors: unknown[] = [];
+    const deliver = (state: T, subscriptions: Iterable<Subscription<T>>) => {
+      for (const subscription of subscriptions) {
+        if (!subscription.active) continue;
+        try {
+          subscription.notify(state);
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+    };
     try {
+      if (initial !== undefined) {
+        deliver(initial.state, initial.subscriptions);
+      }
       // Reentrant commits append to this queue; they never recurse into delivery.
       for (const notification of this.notifications) {
         for (const observer of notification.observers) {
@@ -403,14 +449,34 @@ export class Store<T> implements StoreApi<T> {
             errors.push(error);
           }
         }
-        for (const subscription of notification.subscriptions) {
-          if (!subscription.active) continue;
-          try {
-            subscription.notify(notification.state);
-          } catch (error) {
-            // Preserve arbitrary thrown values and report them after all delivery.
-            errors.push(error);
+        if (notification.batchSequence !== undefined) {
+          if (this.batchedNotification?.batchSequence !== notification.batchSequence) {
+            const pending: BatchedNotification<T> = {
+              state: notification.state,
+              subscriptions: new Set(),
+              batchSequence: notification.batchSequence,
+            };
+            this.batchedNotification = pending;
+            deferNotification(() => {
+              if (this.batchedNotification === pending) {
+                this.batchedNotification = undefined;
+              }
+              this.flushNotifications(pending);
+            });
           }
+          this.batchedNotification.state = notification.state;
+          for (const subscription of notification.subscriptions) {
+            this.batchedNotification.subscriptions.add(subscription);
+          }
+        } else if (hasDeferredNotifications()) {
+          // An intervening non-batched commit must not overtake a queued batch.
+          this.batchedNotification = undefined;
+          deferNotification(() => this.flushNotifications({
+            state: notification.state,
+            subscriptions: new Set(notification.subscriptions),
+          }));
+        } else {
+          deliver(notification.state, notification.subscriptions);
         }
       }
     } finally {
@@ -418,7 +484,7 @@ export class Store<T> implements StoreApi<T> {
       this.notifying = false;
     }
     if (errors.length > 0) {
-      throw new AggregateError(errors, "Store notification failed");
+      throw new NotificationError(errors, "Store notification failed");
     }
   }
 }

@@ -7,7 +7,7 @@ description: "Synchronous commits, FIFO snapshot delivery, and subscription owne
 
 ## Commits and delivery
 
-Updates run through the current middleware chain. A value different by `Object.is` is committed immediately. The store captures that value and current subscriptions in a notification record, then drains records synchronously in FIFO order. No timers, microtasks, or batching are involved.
+Updates run through the current middleware chain. A value different by `Object.is` is committed immediately. The store captures that value and current subscriptions in a notification record, then drains records synchronously in FIFO order. No timers or microtasks are involved. Explicit [`batch`](./derived-and-batch) coalesces ordinary delivery; without it, every captured commit is delivered as before.
 
 An unchanged reference, a same-value updater, or middleware that does not call `next` produces no notification. Middleware runs in outer-to-inner order; ordinary delivery remains inside `next`, before middleware code following it.
 
