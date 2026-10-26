@@ -1,5 +1,25 @@
 # @ilokesto/store
 
+## 2.1.0
+
+### Minor Changes
+
+- 9effd3a: Add immutable writable `focus` views that preserve parent middleware, and
+  `createStoreFamily` with explicit key identity, entry ownership, lifecycle
+  callbacks, and terminal disposal.
+- 468e220: Add framework-neutral lazy derived stores for single and tuple sources, synchronous
+  nested batching, bounded selector memoization, and subscription-owned resource
+  lifecycles with terminal disposal. Preserve ordinary FIFO behavior outside batches
+  and every commit observer record for history and persistence integrations.
+- 09efc4f: Add opt-in `trackedDerived` with shallow property dependency tracking for immutable
+  plain objects and arrays, conservative identity handling for nested and unsupported
+  objects, and the existing disposable readable lifecycle. Preserve existing selector
+  and equality defaults.
+
+### Patch Changes
+
+- 1b7b58d: Require Node.js 24.22.1 or newer and use the security-patched 24.22.1 release for development and CI.
+
 ## 2.0.1
 
 ### Patch Changes
