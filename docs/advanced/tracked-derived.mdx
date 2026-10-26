@@ -1,0 +1,169 @@
+---
+title: "Opt-in property-tracked derived state"
+description: "Skip derivation when observed root properties are unchanged, with an explicit shallow tracking boundary."
+---
+
+# Opt-in property-tracked derived state
+
+`trackedDerived(source, compute, { equalityFn? })` is an optional export from
+`@ilokesto/store`. It returns `DisposableReadableStore<Selection>`, the same
+structural readable contract as [derived](./derived-and-batch). Existing
+selectors, equality defaults, and framework bindings do not change.
+
+```ts
+import { createStore, trackedDerived } from '@ilokesto/store';
+
+const source = createStore({ count: 1, theme: 'light' });
+const doubled = trackedDerived(source, state => state.count * 2);
+const stop = doubled.subscribeSelector(
+  value => value,
+  (next, previous) => console.log({ next, previous }),
+);
+
+source.update(state => ({ ...state, theme: 'dark' })); // Skips compute.
+source.update(state => ({ ...state, count: 2 })); // Computes; delivers 4, 2.
+stop();
+doubled.dispose();
+```
+
+The input can be any structural `ReadableStore<State>`. The result works wherever
+a readonly binding accepts that contract: `getState`, `getInitialState`,
+`subscribe`, and `subscribeSelector`. It has no writable store methods and needs
+no framework runtime. To combine several inputs, compose with `derived`.
+
+Creation is lazy. Reads check the latest source, including while disconnected.
+The first subscription connects upstream, the last unsubscribe disconnects,
+and resubscription refreshes the value. Batching, settled graph notifications,
+initial snapshots, failure propagation, and terminal `dispose()` follow
+`derived`. There is one tracked dependency/result record per instance, not an
+LRU history. Disposal releases it. `getInitialState()` computes from the source's
+initial snapshot and keeps that output separately.
+
+`equalityFn` compares outputs and defaults to `Object.is`. Equal output retains
+the previous reference and suppresses notification. A successful computation
+replaces the tracked dependencies even when its output compares equal; a failed
+computation does not publish a partial dependency set.
+
+## Exact tracking boundary
+
+This is **shallow property tracking**, not deep proxy tracking. During synchronous
+computation, ordinary plain objects (including null-prototype objects) and
+ordinary arrays are represented by a temporary root proxy. Frozen snapshots
+work too. A new root snapshot reuses the result only when its tracked
+observations still match.
+
+| Observation | Dependency |
+| --- | --- |
+| `state.count`, `state[key]` | The returned value, compared with `Object.is`; string and symbol keys work |
+| Missing or optional property | Its read value; missing and present-with-`undefined` are equivalent for a value read |
+| `'key' in state` | Existence, including inherited properties |
+| `Object.hasOwn(state, 'key')` | The own property descriptor, including absence |
+| `Reflect.ownKeys(state)` | All own keys in order, including symbols and non-enumerable keys |
+| `Object.keys`, object spread, `for...in` | Keys plus the descriptors/values those operations inspect |
+| `Object.getOwnPropertyDescriptor` | The full descriptor, including value, getter/setter identities, and flags |
+| Array indexing, length, iteration, `map` | The accessed root indices, length, existence checks, and methods |
+| Prototype or extensibility checks | Prototype identity is always checked; extensibility is checked when observed |
+
+Descriptor tracking is conservative: `Object.keys` and `Object.hasOwn` can
+recompute after a descriptor's value changes even if the resulting key list or
+boolean does not. Output equality can still suppress notification. Accessors
+run with the original snapshot as receiver; checking their observed values may
+invoke them even when `compute` is skipped. Getters must be pure.
+
+Dependencies are rebuilt for each successful computation. In
+`state.useLeft ? state.left : state.right`, the inactive branch is not read.
+Switching the branch starts tracking its value and stops tracking the old one.
+
+Nested objects and arrays are **raw identity dependencies**:
+
+```ts
+const name = trackedDerived(sourceWithUser, state => state.user.name);
+```
+
+This tracks `user`, not the nested `name` path. Replacing another root field while
+retaining `user` skips computation. Replacing `user` recomputes even if only
+`user.age` changed. Returning `state.user` retains the original reference.
+
+`Date`, `Map`, `Set`, class instances, functions, and custom-prototype roots do
+not receive property tracking. They pass directly to `compute`, and each changed
+root identity recomputes. Nested instances also stay raw and invalidate by
+identity. Thus native methods and private fields keep their valid receivers;
+two different dates or maps are never considered equivalent merely because
+they have no enumerable properties. Primitive and nullish snapshots use normal
+identity memoization.
+
+All snapshots, nested values, and prototypes must be immutable. Replace a `Map`
+or `Date` when it changes; mutating it in place is not supported. This API does
+not introduce mutation observation, freezing, or recursive readonly types.
+Caller-supplied proxies and externally mutable prototypes are outside the
+tracking contract.
+
+Use a pure synchronous computation. Root writes through the tracking proxy
+throw; nested raw values must not be mutated either. Do not compare the temporary
+root by identity, use it as a `Map`/`WeakMap` key, retain it, capture it in a
+returned function, or embed it inside a returned object. The proxy is revoked
+after computation, so escaped reads fail rather than silently changing the
+dependency set. Returning the root directly (`state => state`) is supported:
+it returns the original snapshot and falls back to whole-snapshot identity.
+For unrestricted root identity operations or asynchronous work, use ordinary
+`derived` and explicit inputs instead.
+
+## Calculation and render-invalidation comparison
+
+This example counts computation, not elapsed time. Counters are diagnostic
+instrumentation; production computations should be pure.
+
+```ts
+import { createStore, derived, memoizeSelector, trackedDerived } from '@ilokesto/store';
+
+const source = createStore({ count: 1, other: 0 });
+let trackedCalculations = 0;
+let memoCalculations = 0;
+let trackedInvalidations = 0;
+let memoInvalidations = 0;
+
+const tracked = trackedDerived(source, state => {
+  trackedCalculations++;
+  return state.count * 2;
+});
+const memoized = derived(source, memoizeSelector(state => {
+  memoCalculations++;
+  return state.count * 2;
+}));
+const stopTracked = tracked.subscribe(() => { trackedInvalidations++; });
+const stopMemo = memoized.subscribe(() => { memoInvalidations++; });
+
+for (let other = 1; other <= 100; other++) {
+  source.set({ count: 1, other });
+}
+source.set({ count: 2, other: 100 });
+// Calculations: tracked 2, memoized 102 (including initial calculation).
+// Invalidations: tracked 1, memoized 1.
+
+stopTracked();
+stopMemo();
+tracked.dispose();
+memoized.dispose();
+```
+
+Both primitive outputs notify only once, so fewer computations do **not** imply
+fewer renders. If both computations instead return a fresh object
+`{ doubled: state.count * 2 }` with default equality, tracked output invalidates
+once and root-identity memoization invalidates 101 times. A readonly UI binding
+can use these invalidations to request a render; actual component render counts
+also depend on framework batching, development checks, and parent renders.
+These are tested notification counts, not a claim about framework render counts.
+
+| Output, after 100 unrelated writes and one count change | Tracked calculations | Root-identity memoized calculations | Tracked invalidations | Memoized invalidations |
+| --- | --- | --- | --- | --- |
+| Number | 2 | 102 | 1 | 1 |
+| Fresh object, default equality | 2 | 102 | 1 | 101 |
+
+The deterministic comparison lives in `src/trackedDerived.test.ts`. There is no
+wall-clock speed claim: tracking adds a proxy and dependency checks, and
+enumeration may inspect every key. Cheap selectors or frequently changing
+observed fields may not benefit. Explicitly selecting a stable input before
+`memoizeSelector`, or giving `derived` suitable output equality, can avoid the
+same work or notifications without tracking. Prefer those when dependencies
+are simple; use this opt-in API when branch-dependent root reads would otherwise
+need repeated manual input comparisons.
