@@ -1,5 +1,5 @@
 {
   "title": "Advanced",
   "defaultOpen": true,
-  "pages": ["notification-semantics"]
+  "pages": ["notification-semantics", "derived-and-batch"]
 }
