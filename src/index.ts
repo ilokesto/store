@@ -15,6 +15,8 @@ export { createStoreFamily } from "./createStoreFamily.js";
 export type { StoreFamily, StoreFamilyOptions } from "./createStoreFamily.js";
 export { memoizeSelector } from "./memoizeSelector.js";
 export type { MemoizedSelector, MemoizeSelectorOptions } from "./memoizeSelector.js";
+export { trackedDerived } from "./trackedDerived.js";
+export type { TrackedDerivedOptions } from "./trackedDerived.js";
 export { withLifecycle } from "./withLifecycle.js";
 export type {
   DisposableReadableStore,
