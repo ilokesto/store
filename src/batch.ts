@@ -52,7 +52,7 @@ export function getBatchSequence(): number | undefined {
 }
 
 export function hasDeferredNotifications(): boolean {
-  return flushing || notifications.length > 0;
+  return notifications.length > 0;
 }
 
 export function deferNotification(notify: () => void): void {
