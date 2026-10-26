@@ -1,0 +1,140 @@
+---
+title: "Writable focus and store families"
+description: "Select immutable writable views and explicitly own keyed store instances."
+---
+
+# Writable focus and store families
+
+Both APIs are framework-neutral root exports from `@ilokesto/store`.
+
+## Focus a parent value
+
+`focus(parent, read, write, options?)` returns a `WritableFocus<Selection>`.
+The getter receives a shallow readonly parent snapshot. The write-back function
+receives the current parent state and the next selected value and must return a
+new immutable parent state. It must not mutate either argument.
+
+```ts
+import { createStore, focus } from '@ilokesto/store';
+
+const account = createStore({ user: { name: 'Ada', age: 30 }, theme: 'dark' });
+const name = focus(
+  account,
+  state => state.user.name,
+  (state, name) => ({ ...state, user: { ...state.user, name } }),
+);
+name.set('Grace');
+name.update(previous => previous.toUpperCase());
+name.setState(previous => previous + '!');
+name.dispose();
+```
+
+`set(value)` always stores a literal, including a function. `setState(action)`
+accepts a replacement or an updater, and `update(updater)` explicitly transforms
+the selected value. Each write calls the parent's `update` method, so parent
+middleware can delay, transform, or reject it. The getter, selected updater, and
+write-back run against the parent state when middleware forwards the action,
+not against a snapshot captured when the write was requested. An `Object.is`
+equal selected value returns the unchanged parent without calling write-back.
+The action still traverses parent middleware. Nested writable focus views are
+supported and preserve the root middleware pipeline.
+
+There is no string path parsing or implicit object creation. Handle missing
+values explicitly in your getter and setter:
+
+```ts
+const profile = createStore<{ name?: string }>({});
+const optionalName = focus(
+  profile,
+  state => state.name,
+  (_state, name) => name === undefined ? {} : { name },
+);
+optionalName.set('Ada');
+optionalName.set(undefined);
+optionalName.dispose();
+```
+
+### Read-only views, equality, and ownership
+
+`focus(parent, read, options?)` returns a `DisposableReadableStore<Selection>`
+with no write methods, even if the parent is writable. A write-back overload
+requires a parent with `update`; a read-only parent cannot grant write access.
+The writable result deliberately has no local middleware registration methods:
+register middleware on the parent.
+
+Focus delegates reading and subscriptions to `derived`. `options` is
+`DerivedOptions<Selection>`: `equalityFn` defaults to `Object.is`, and `cacheSize`
+defaults to `1`. Output equality retains the previous output reference and
+suppresses equal notifications; it does not override write-time `Object.is`.
+Reads are lazy and current, `getInitialState` selects the parent's initial state,
+and source connections exist only while the view has subscribers.
+Subscriptions retain derived batching, settled reentrant delivery, duplicate
+listener ownership, and next/previous selector baselines.
+
+Keep getters, setters, and equality functions pure. Snapshots are shallow
+readonly types, not clones or frozen runtime values. `dispose()` is terminal
+and idempotent, disconnects subscriptions, and cancels pending notifications
+without disposing the parent. Later reads, subscriptions, and writes throw.
+A delayed middleware action forwarded after disposal also throws before
+changing the parent. Existing unsubscribe functions remain safe.
+
+## Cache explicitly owned stores by key
+
+`createStoreFamily(create, options?)` returns `StoreFamily<Key, Instance>`.
+The factory creates a structural readable store; the exact instance type,
+including any write methods, is preserved.
+
+```ts
+import { createStore, createStoreFamily } from '@ilokesto/store';
+
+const counters = createStoreFamily(
+  (id: string) => createStore({ id, count: 0 }),
+  {
+    onCreate: (instance, key) => console.log('created', key),
+    onRemove: (instance, key) => console.log('removed', key),
+  },
+);
+const first = counters.get('one');
+first.update(state => ({ ...state, count: state.count + 1 }));
+counters.get('one') === first; // true
+counters.has('one'); // true
+counters.size; // 1
+counters.remove('one'); // true; next get creates a new instance
+counters.clear(); // Release current entries; family remains usable
+counters.dispose(); // Terminal
+```
+
+Keys follow `Map` identity: primitives use SameValueZero (`NaN` equals `NaN`,
+and `0` equals `-0`), and objects use reference identity, not deep equality.
+Two separate `{ id: 1 }` objects are different keys. No custom hashing or
+serialization is performed.
+
+Entries and keys are **strongly retained without a capacity limit or automatic
+eviction**. Call `remove`, `clear`, or `dispose` at the owning scope's boundary;
+unsubscribe alone does not evict a family entry. `size` and `has` allow explicit
+inspection without creating instances.
+
+The factory must create a fresh, exclusively owned instance for each entry.
+When releasing an entry, the family first removes it from the cache, then calls
+its `dispose()` method if present, then calls `onRemove(instance, key)`.
+Use `withLifecycle` or `focus` for instances whose subscriptions must be
+terminated automatically. A plain `Store` has no disposal method; removal drops
+family ownership but does not invalidate references or subscriptions held
+elsewhere. `onRemove` can release other factory-owned resources. Never return a
+shared externally owned disposable instance unless transferring ownership.
+
+`onCreate(instance, key)` runs after insertion, so same-key lookups inside it
+reuse the instance. If it throws, that entry is removed and disposed, and
+`onRemove` still runs. Factory failures are not cached; the factory must clean
+up resources acquired before it throws. Recursive same-key factory lookup
+throws instead of creating duplicate entries. Callbacks and factories must be
+synchronous.
+
+`remove` returns false for absent entries. `clear` takes a snapshot and removes
+all current entries before cleanup, so entries created by cleanup callbacks
+remain available. Removal/disposal failures do not prevent other entries or
+`onRemove` callbacks from being cleaned up; failures are reported as
+`AggregateError`. `dispose` marks the family terminal before cleanup, so
+callback attempts to create new entries throw. All later `get` calls throw;
+`size` is zero, `has` is false, and repeated cleanup calls are safe.
+Disposing a family does not dispose the parents of focused entries.
