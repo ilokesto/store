@@ -59,8 +59,8 @@ computation. `setState(fn)` always treats its function argument as an updater.
 
 Notifications drain synchronously in FIFO order using captured commits. Listener
 failures are collected into an `AggregateError` after delivery; committed state is
-not rolled back. Reentrant writes are queued until the current notification
-finishes; unsubscribing takes effect immediately.
+not rolled back. Reentrant writes commit immediately; their notifications wait
+for the current delivery to finish. Unsubscribing takes effect immediately.
 
 <details>
 <summary>Development</summary>
