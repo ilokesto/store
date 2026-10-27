@@ -10,13 +10,9 @@ documentation website. Use Node 24.22.1 and pnpm 10.17.1 from this repository ro
 - Only this library and private workspaces in this repository may use workspace
   links. Other ilokesto libraries are registry dependencies.
 - Run `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm test:typecheck`, and
-  `pnpm migrate:verify`, plus the four documentation quality commands in
-  `README.md`.
+  the four documentation quality commands in `README.md`.
 - Repository setup alone does not require a Changeset. Consumer-facing changes
   require a root Changeset.
-- Preserve `.migration/source-manifest.json`, original archive refs, and tag
-  objects. The migration verifier checks immutable history and current
-  standalone safety without freezing future HEAD, version, or API.
 - `release:verify --sha <full-SHA>` is read-only. Main updates maintain the
   Changesets release PR; its merge publishes only the exact successful Verify
   artifact through GitHub Actions. Never publish locally or deploy documentation.

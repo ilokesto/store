@@ -45,7 +45,6 @@
     "docs:publication:verify": "node scripts/docs-publication.mjs verify && node scripts/docs-runtime.mjs verify",
     "docs:publication:capture": "node scripts/docs-publication.mjs capture",
     "docs:publication:promote": "node scripts/docs-publication.mjs promote",
-    "migrate:verify": "node scripts/verify-migration.mjs",
     "release:verify": "node scripts/release-verify.mjs",
     "changeset": "changeset",
     "changeset:status": "changeset status",
