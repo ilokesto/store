@@ -29,7 +29,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Require explicit release-PR enablement
-        run: node -e "const p=require('./.release/policy.json'); if (!p.releasePrEnabled) process.exit(1)"
+        run: node -e "const p=require('./.github/release/policy.json'); if (!p.releasePrEnabled) process.exit(1)"
       - name: Create or update release PR without publishing
         id: changesets
         uses: changesets/action@v1

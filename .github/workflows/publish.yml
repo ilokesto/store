@@ -99,7 +99,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Publish only the exact Verify artifact after live revalidation
-        run: node scripts/publish-verified.mjs "$RELEASE_SHA"
+        run: node .github/release/publish-verified.mjs "$RELEASE_SHA"
         env:
           RELEASE_SHA: ${{ needs.plan.outputs.sha }}
           GH_TOKEN: ${{ github.token }}

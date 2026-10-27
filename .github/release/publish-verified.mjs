@@ -4,10 +4,10 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { verifyRelease } from './release-verify.mjs';
+import { verifyRelease } from '../../scripts/release-verify.mjs';
 
-const root = path.resolve(import.meta.dirname, '..');
-const policy = JSON.parse(await readFile(path.join(root, '.release/policy.json'), 'utf8'));
+const root = path.resolve(import.meta.dirname, '../..');
+const policy = JSON.parse(await readFile(path.join(root, '.github/release/policy.json'), 'utf8'));
 assert.equal(policy.publishingEnabled, true, 'BOOTSTRAP_PUBLISHING_DISABLED');
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'LOCAL_PUBLISH_FORBIDDEN');
 assert.equal(process.env.GITHUB_REPOSITORY, policy.repository, 'FOREIGN_REPOSITORY');

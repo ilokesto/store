@@ -91,7 +91,7 @@ jobs:
           pnpm test:typecheck
           pnpm test:tooling
       - name: Package exact verified head
-        run: node scripts/release-artifact.mjs "$VERIFIED_SHA"
+        run: node .github/release/release-artifact.mjs "$VERIFIED_SHA"
         env:
           VERIFIED_SHA: ${{ inputs.expected_head_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/upload-artifact@v4

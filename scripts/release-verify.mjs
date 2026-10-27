@@ -81,7 +81,7 @@ export async function verifyRelease({
   },
 } = {}) {
   const manifest = json(await readFile(path.join(root, 'package.json')));
-  const policy = json(await readFile(path.join(root, '.release/policy.json')));
+  const policy = json(await readFile(path.join(root, '.github/release/policy.json')));
   const repository = policy.repository;
   validateReleaseIdentity({ sha, manifest, repository, head: git(root, ['rev-parse', 'HEAD']) });
   assert.equal(git(root, ['status', '--porcelain', '--untracked-files=all']), '', 'DIRTY_RELEASE_CHECKOUT');

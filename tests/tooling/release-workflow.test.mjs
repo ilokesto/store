@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { parse } from 'yaml';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const policy = JSON.parse(await readFile(path.join(root, '.release/policy.json'), 'utf8'));
+const policy = JSON.parse(await readFile(path.join(root, '.github/release/policy.json'), 'utf8'));
 const publish = parse(await readFile(path.join(root, '.github/workflows/publish.yml'), 'utf8'));
 const release = parse(await readFile(path.join(root, '.github/workflows/release.yml'), 'utf8'));
 const sha = 'a'.repeat(40);
@@ -106,4 +107,48 @@ test('release workflow: generated PR -> explicit CI dispatch verifies its exact 
     `workflow run ci.yml --ref changeset-release/main -f expected_head_sha=${sha} -f release_pr_number=42`);
   assert.equal(release.jobs.release.permissions.actions, 'write');
   assert.ok(!release.jobs.release.steps.some(step => step.with?.publish));
+});
+
+test('CI artifact command: isolated checkout -> packages the exact repository head', async t => {
+  const temporary = await mkdtemp(path.join(os.tmpdir(), 'release-artifact-command-'));
+  t.after(() => rm(temporary, { recursive: true, force: true }));
+  await mkdir(path.join(temporary, '.github/release'), { recursive: true });
+  await mkdir(path.join(temporary, 'scripts'));
+  await mkdir(path.join(temporary, 'dist'));
+  for (const file of [
+    '.github/release/policy.json', '.github/release/release-artifact.mjs',
+    'scripts/release-verify.mjs', 'scripts/release-tar.mjs',
+  ]) await copyFile(path.join(root, file), path.join(temporary, file));
+  await writeFile(path.join(temporary, 'package.json'), JSON.stringify({
+    name: '@' + policy.repository, version: '0.0.0', type: 'module', files: ['dist'],
+    packageManager: 'pnpm@10.17.1',
+  }));
+  await writeFile(path.join(temporary, 'dist/index.js'), 'export const value = 42;\n');
+  const env = {
+    ...process.env, GIT_MASTER: '1',
+    GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.test',
+    GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.test',
+  };
+  const git = args => execFileSync('git', ['--no-pager', ...args], {
+    cwd: temporary, env, encoding: 'utf8',
+  }).trim();
+  git(['init', '--quiet', '-b', 'main']);
+  git(['add', '.']);
+  git(['commit', '--quiet', '-m', 'Release artifact fixture']);
+  const head = git(['rev-parse', 'HEAD']);
+  const ci = parse(await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8'));
+  const artifact = ci.jobs.quality.steps.find(step => step.env?.VERIFIED_SHA);
+
+  const result = spawnSync('bash', ['-c', artifact.run], {
+    cwd: temporary, encoding: 'utf8', env: { ...env, VERIFIED_SHA: head },
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const metadata = JSON.parse(await readFile(path.join(temporary, 'artifacts/verification.json'), 'utf8'));
+  assert.equal(metadata.repository, policy.repository);
+  assert.equal(metadata.sha, head);
+  assert.equal(metadata.package, '@' + policy.repository);
+  assert.equal(metadata.version, '0.0.0');
+  const tarball = await readFile(path.join(temporary, 'artifacts', metadata.file));
+  assert.equal(metadata.packSha256, createHash('sha256').update(tarball).digest('hex'));
 });
