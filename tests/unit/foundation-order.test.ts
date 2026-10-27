@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { createStore, derived } from "./index";
+import { createStore, derived } from "../../src/index";
 
 it("derived: callback writes an independent store -> ordinary middleware delivery stays synchronous", () => {
   const input = createStore(0);

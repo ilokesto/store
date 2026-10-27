@@ -1,4 +1,4 @@
-import { Store } from "../src/index";
+import { Store } from "../../src/index";
 
 class ExistingStore extends Store<{ readonly count: number }> {
   override subscribe(listener: () => void): () => void {

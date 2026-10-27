@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { Store } from "./index";
+import { Store } from "../../src/index";
 
 describe("Store", () => {
   it("commit observation: reentrant updates and throwing listeners preserve captured sequence and source", () => {

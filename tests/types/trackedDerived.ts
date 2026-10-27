@@ -1,10 +1,10 @@
 import { expectTypeOf } from "vitest";
-import { createStore, derived, memoizeSelector, trackedDerived } from "../src/index";
+import { createStore, derived, memoizeSelector, trackedDerived } from "../../src/index";
 import type {
   DisposableReadableStore,
   ReadableStore,
   TrackedDerivedOptions,
-} from "../src/index";
+} from "../../src/index";
 
 const source = createStore({ count: 1, label: "item" });
 const tracked = trackedDerived(source, state => {

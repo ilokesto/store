@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { batch, createStore, createStoreFamily, focus, withLifecycle } from "./index";
-import type { Middleware, ReadableStore, StoreFamily } from "./index";
+import { batch, createStore, createStoreFamily, focus, withLifecycle } from "../../src/index";
+import type { Middleware, ReadableStore, StoreFamily } from "../../src/index";
 
 describe("focus", () => {
   it("focus: nested immutable writes -> parent middleware and untouched references are preserved", () => {

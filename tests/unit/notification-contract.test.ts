@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { Store } from "./index";
+import { Store } from "../../src/index";
 
 describe("ordered store transitions", () => {
   it("delivers every committed selection in order when a listener writes again", () => {

@@ -6,8 +6,8 @@ import {
   memoizeSelector,
   trackedDerived,
   withLifecycle,
-} from "./index";
-import type { ReadableStore } from "./index";
+} from "../../src/index";
+import type { ReadableStore } from "../../src/index";
 
 describe("trackedDerived", () => {
   it("trackedDerived: related and unrelated writes -> only observed values recompute", () => {

@@ -5,8 +5,8 @@ import {
   derived,
   memoizeSelector,
   withLifecycle,
-} from "./index";
-import type { DisposableReadableStore, ReadableStore, Unsubscribe } from "./index";
+} from "../../src/index";
+import type { DisposableReadableStore, ReadableStore, Unsubscribe } from "../../src/index";
 
 describe("batch", () => {
   it("batch: nested writes -> immediate reads and one final ordinary delivery", () => {
