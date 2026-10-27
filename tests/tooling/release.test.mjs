@@ -65,11 +65,11 @@ async function releaseFixture(t) {
   t.after(() => rm(temporary, { recursive: true, force: true }));
   const root = path.join(temporary, 'repo');
   await mkdir(path.join(root, 'dist'), { recursive: true });
-  await mkdir(path.join(root, '.release'));
+  await mkdir(path.join(root, '.github/release'), { recursive: true });
   await writeFile(path.join(root, 'dist/index.js'), 'export const value = 42;\n');
   await writeFile(path.join(root, 'package.json'), JSON.stringify({ ...manifest, files: ['dist'],
     type: 'module', packageManager: 'pnpm@10.17.1', publishConfig: { access: 'public', tag: 'latest' } }));
-  await writeFile(path.join(root, '.release/policy.json'), JSON.stringify({ repository, distTag: 'latest', publishingEnabled: false }));
+  await writeFile(path.join(root, '.github/release/policy.json'), JSON.stringify({ repository, distTag: 'latest', publishingEnabled: false }));
   const env = { ...process.env, GIT_MASTER: '1', GIT_PAGER: 'cat', PAGER: 'cat',
     GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.test',
     GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.test' };
@@ -187,7 +187,7 @@ test('CI dispatch: main, PR, moving head, and foreign repository -> exact gate s
 });
 
 test('publisher boundary: automated release policy -> local publication rejected', async () => {
-  const policy = JSON.parse(await readFile(path.join(rootDir, '.release/policy.json'), 'utf8'));
+  const policy = JSON.parse(await readFile(path.join(rootDir, '.github/release/policy.json'), 'utf8'));
   const publish = parse(await readFile(path.join(rootDir, '.github/workflows/publish.yml'), 'utf8'));
   const release = parse(await readFile(path.join(rootDir, '.github/workflows/release.yml'), 'utf8'));
   assert.equal(policy.publishingEnabled, true);
@@ -198,7 +198,7 @@ test('publisher boundary: automated release policy -> local publication rejected
   assert.equal(release.jobs.release.if, undefined);
   assert.ok(!release.jobs.release.steps.some(step => step.with?.publish));
   assert.equal(publish.jobs.publish.steps[1].with.ref, '${{ needs.plan.outputs.sha }}');
-  const result = spawnSync(process.execPath, ['scripts/publish-verified.mjs', sha], {
+  const result = spawnSync(process.execPath, ['.github/release/publish-verified.mjs', sha], {
     cwd: rootDir, encoding: 'utf8', env: { ...process.env, GITHUB_ACTIONS: 'false' },
   });
   assert.notEqual(result.status, 0);
