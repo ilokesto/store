@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@ilokesto/store?style=flat&color=555)](https://www.npmjs.com/package/@ilokesto/store)
 ![MIT](https://img.shields.io/badge/license-MIT-555?style=flat)
 
-[문서](./docs/index.ko.mdx) | [API](./docs/reference/store.ko.mdx) | [English](./README.md)
+[English](./README.md)
 
 - `createStore()` 또는 `Store<T>`로 타입이 있는 스토어를 만듭니다.
 - 명시적인 해제와 동등성 비교로 전체 상태나 선택한 값만 구독합니다.
@@ -59,16 +59,7 @@ unsubscribe();
 
 알림은 캡처한 커밋을 동기 FIFO 순서로 전달합니다. Listener 오류는 전달을 마친 뒤
 `AggregateError`로 모아 던지며 이미 커밋한 상태를 되돌리지 않습니다.
-아래 알림 계약에서 재진입 쓰기, 독립적인 등록, 즉시 구독 해제와
-커밋 단위 연동의 의미론을 확인할 수 있습니다.
-
-## 더 알아보기
-
-- [상태 스냅샷과 불변 업데이트](./docs/core-concepts.ko.mdx)
-- [값 교체와 updater 의미론](./docs/reference/set-state.ko.mdx)
-- [구독, selector, 동등성 비교와 해제](./docs/reference/subscribe.ko.mdx)
-- [미들웨어 조합](./docs/guides/composing-middleware.ko.mdx)
-- [알림 계약과 커밋 관측](./docs/advanced/notification-semantics.ko.mdx)
+재진입 쓰기는 현재 알림이 끝날 때까지 대기하며 구독 해제는 즉시 적용됩니다.
 
 <details>
 <summary>개발</summary>
@@ -82,20 +73,14 @@ pnpm typecheck
 pnpm test
 pnpm test:typecheck
 pnpm test:tooling
-pnpm docs:publication:verify
-pnpm docs:typecheck
-pnpm docs:build
-pnpm docs:test
 ```
 
-빌드 결과는 `dist/`에 생성됩니다. 전용 문서 사이트를 빌드한 뒤
-`pnpm docs:start`로 로컬에서 실행합니다. 공식 영문·한국어 문서는 `docs/`에,
-렌더러는 `website/`에 있습니다.
+빌드 결과는 `dist/`에 생성됩니다.
 
-변경 불가능한 문서 기록과 마이그레이션 이력을 보존하세요.
+마이그레이션 이력을 보존하세요.
 PR에서는 Verify를 실행하고 main 변경 시 Changesets 릴리스 PR을 생성·갱신합니다.
 릴리스 PR을 머지하면 해당 main 커밋의 Verify 성공 후 검증된 패키지를 npm에 게시합니다.
 적용 전에 Actions의 PR 생성 권한과 Production 환경의 `NPM_TOKEN`을 설정하세요.
-로컬 게시나 문서 배포는 하지 않습니다.
+로컬 게시는 하지 않습니다.
 
 </details>

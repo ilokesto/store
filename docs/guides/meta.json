@@ -1,5 +1,0 @@
-{
-  "title": "Guides",
-  "defaultOpen": true,
-  "pages": ["small-state", "subscription-lifecycle", "composing-middleware"]
-}

@@ -11,11 +11,6 @@ node_modules/
 /coverage
 /pages/test.tsx
 
-# next.js
-/.next/
-.next/
-/out/
-
 # production
 /build
 /dist
@@ -25,12 +20,7 @@ node_modules/
 .DS_Store
 *.pem
 *.tgz
-!docs-publication/releases/**/npm/package.tgz
 OWNERSHIP.json
-.source/
-docs-publication/.generated/
-docs-publication/runtime/.generated/
-docs-publication/.publication.lock
 artifacts/
 
 # debug
@@ -41,10 +31,5 @@ yarn-error.log*
 # local env files
 .env*.local
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-website/public/fonts/
