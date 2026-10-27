@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { tarFiles } from './docs-publication/io.mjs';
+import { tarFiles } from './release-tar.mjs';
 
 const rootDir = path.resolve(import.meta.dirname, '..');
 const shaPattern = /^[0-9a-f]{40}$/;

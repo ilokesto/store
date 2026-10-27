@@ -7,11 +7,10 @@ import { test } from 'node:test';
 
 const repository = path.resolve(import.meta.dirname, '../..');
 
-test('Changesets: public root with private workspaces -> versions only the owning library', async t => {
+test('Changesets: standalone public root -> versions only the owning library', async t => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'fetcher-changesets-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  for (const file of ['package.json', 'pnpm-workspace.yaml', '.changeset/config.json',
-    'website/package.json', 'docs-publication/runtime/package.json']) {
+  for (const file of ['package.json', 'pnpm-workspace.yaml', '.changeset/config.json']) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await cp(path.join(repository, file), path.join(root, file));
   }
@@ -43,17 +42,7 @@ test('Changesets: public root with private workspaces -> versions only the ownin
   assert.equal(versioned[0].type, 'patch');
   assert.equal(versioned[0].oldVersion, manifest.version);
   assert.notEqual(versioned[0].newVersion, manifest.version);
-  const privateNames = [];
-  for (const file of ['website/package.json', 'docs-publication/runtime/package.json']) {
-    const workspace = JSON.parse(await readFile(path.join(root, file), 'utf8'));
-    assert.equal(workspace.private, true);
-    privateNames.push(workspace.name);
-  }
-  for (const release of plan.releases.filter(release => release.name !== manifest.name)) {
-    assert.ok(privateNames.includes(release.name));
-    assert.equal(release.type, 'none');
-    assert.equal(release.newVersion, release.oldVersion);
-  }
+  assert.deepEqual(plan.releases.map(release => release.name), [manifest.name]);
   git(['switch', '-c', 'pr-fixture']);
   git(['branch', '-d', 'main']);
   const ciOutput = path.join(root, 'ci-plan.json');

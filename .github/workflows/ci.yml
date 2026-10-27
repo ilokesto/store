@@ -83,7 +83,6 @@ jobs:
       - name: Check ordinary pull request release declarations
         if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
         run: pnpm changeset:status --since=origin/main
-      - run: pnpm --dir website exec playwright install --with-deps chromium
       - name: Library and standalone checks
         run: |
           pnpm build
@@ -91,12 +90,6 @@ jobs:
           pnpm test
           pnpm test:typecheck
           pnpm test:tooling
-      - name: Documentation checks
-        run: |
-          pnpm docs:publication:verify
-          pnpm docs:typecheck
-          pnpm docs:build
-          pnpm docs:test
       - name: Package exact verified head
         run: node scripts/release-artifact.mjs "$VERIFIED_SHA"
         env:
