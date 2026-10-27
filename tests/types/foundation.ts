@@ -1,6 +1,6 @@
 import { expectTypeOf } from "vitest";
-import { batch, createStore, derived, memoizeSelector, withLifecycle } from "../src/index";
-import type { DisposableReadableStore, ReadableStore } from "../src/index";
+import { batch, createStore, derived, memoizeSelector, withLifecycle } from "../../src/index";
+import type { DisposableReadableStore, ReadableStore } from "../../src/index";
 
 const count = createStore(1);
 const label = createStore({ label: "item" });

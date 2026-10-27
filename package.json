@@ -31,15 +31,16 @@
   "author": "Jeong Jinho <wpfekdml@me.com>",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.typecheck.json",
-    "test": "vitest run src",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && pnpm test:unit && pnpm test:types && pnpm test:tooling",
     "test:watch": "vitest",
-    "test:typecheck": "tsc --project tsconfig.typecheck.json",
     "test:tooling": "node --test tests/tooling/*.test.mjs",
     "release:verify": "node scripts/release-verify.mjs",
     "changeset": "changeset",
     "changeset:status": "changeset status",
-    "version-packages": "changeset version && pnpm install --lockfile-only"
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "test:unit": "vitest run tests/unit",
+    "test:types": "tsc --noEmit -p tests/tsconfig.json"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.1",

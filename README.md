@@ -69,14 +69,11 @@ Use Node 24.22.1 and pnpm 10.17.1. Run these commands from this repository root:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build
 pnpm typecheck
 pnpm test
-pnpm test:typecheck
-pnpm test:tooling
 ```
 
-Build output goes to `dist/`.
+`pnpm test` builds once and runs `test:unit`, `test:types`, and `test:tooling`. Tests live under `tests/unit`, `tests/types`, and `tests/tooling`. Build output goes to `dist/`.
 
 Keep migration history intact. Pull requests run Verify; main updates create or
 refresh the Changesets release PR. Merging

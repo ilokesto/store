@@ -69,14 +69,11 @@ Node 24.22.1과 pnpm 10.17.1을 사용하고 저장소 루트에서 실행하세
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build
 pnpm typecheck
 pnpm test
-pnpm test:typecheck
-pnpm test:tooling
 ```
 
-빌드 결과는 `dist/`에 생성됩니다.
+`pnpm test`는 한 번 빌드한 뒤 `test:unit`, `test:types`, `test:tooling`을 실행합니다. 테스트는 `tests/unit`, `tests/types`, `tests/tooling`에 모여 있으며 빌드 결과는 `dist/`에 생성됩니다.
 
 마이그레이션 이력을 보존하세요.
 PR에서는 Verify를 실행하고 main 변경 시 Changesets 릴리스 PR을 생성·갱신합니다.

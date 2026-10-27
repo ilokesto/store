@@ -1,6 +1,6 @@
 import { expectTypeOf } from "vitest";
-import { createStore, createStoreFamily, focus } from "../src/index";
-import type { DisposableReadableStore, ReadableStore, StoreFamily, WritableFocus } from "../src/index";
+import { createStore, createStoreFamily, focus } from "../../src/index";
+import type { DisposableReadableStore, ReadableStore, StoreFamily, WritableFocus } from "../../src/index";
 
 const parent = createStore({ user: { name: "Ada" }, count: 1 });
 const name = focus(parent, state => {
