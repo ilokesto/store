@@ -13,9 +13,7 @@
 
 ## 설치
 
-기여자는 [JSDOC.md](./JSDOC.md)의 영어 API 문서 계약을 따르고
-`pnpm lint:jsdoc`를 실행하세요. `pnpm test:tooling`에도 포함되며 배포 선언에
-주석이 보존되어 편집기에서 확인할 수 있습니다.
+기여자는 [JSDOC.md](./JSDOC.md)의 영어 API 문서 계약을 따르고 `pnpm lint:jsdoc`를 실행하세요. `pnpm test:tooling`에도 포함되며 배포 선언에 주석이 보존되어 편집기에서 확인할 수 있습니다.
 
 ```sh
 pnpm add @ilokesto/store
