@@ -17,8 +17,15 @@ export interface MemoizedSelector<T, Selection> extends Selector<T, Selection> {
 }
 
 /**
- * Memoizes a pure selector in a per-instance bounded LRU cache.
+ * @description Memoizes a pure selector in a per-instance bounded LRU cache.
  * Failed computations are never cached.
+ * @param {Selector<T, Selection>} selector - Pure computation; failures are not cached.
+ * @param {MemoizeSelectorOptions<T>} [options] - Input cache policy.
+ * @param {number} [options.maxSize] - Positive safe integer entry limit; defaults to one.
+ * @param {EqualityFn<Readonly<T>>} [options.equalityFn] - Input equality; defaults to Object.is.
+ * @returns {MemoizedSelector<T, Selection>} Callable selector with an owned LRU cache.
+ * - size `number` - Number of retained input/result pairs.
+ * - clear `() => void` - Releases cached inputs and results.
  * @example
  * const select = memoizeSelector(state => expensive(state), { maxSize: 4 });
  * select.clear();

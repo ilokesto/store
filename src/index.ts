@@ -177,7 +177,7 @@ type CommitSubscription<T> = {
 };
 
 /**
- * Framework-neutral state container with synchronous commits and FIFO delivery.
+ * @description Framework-neutral state container with synchronous commits and FIFO delivery.
  *
  * Each changed value captures the current subscriptions. Reentrant commits
  * enqueue notifications rather than recursively delivering them. Subscriber,
@@ -205,7 +205,8 @@ export class Store<T> implements StoreApi<T> {
   private batchedNotification: BatchedNotification<T> | undefined;
 
   /**
-   * Stores the initial value as-is, including callable values.
+   * @description Stores the initial value as-is, including callable values.
+   * @param {T} initialState - Original value retained without cloning or invoking functions.
    * @example
    * const store = new Store(() => "initial");
    */
@@ -214,7 +215,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Returns the latest committed value without cloning or freezing it.
+   * @description Returns the latest committed value without cloning or freezing it.
+   * @returns {Readonly<T>} Latest committed snapshot, not a frozen copy.
    * @example
    * const count = createStore(1).getState();
    */
@@ -223,7 +225,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Returns the original constructor value, even after later replacements.
+   * @description Returns the original constructor value, even after later replacements.
+   * @returns {Readonly<T>} Original snapshot retained at construction.
    * @example
    * const store = createStore(1);
    * store.set(2);
@@ -234,7 +237,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Returns the latest commit number; unchanged or rejected updates do not advance it.
+   * @description Returns the latest commit number; unchanged or rejected updates do not advance it.
+   * @returns {number} Store-local count of changed commits.
    * @example
    * const before = store.getCommitSequence();
    */
@@ -243,8 +247,10 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Observes captured commits before ordinary subscribers, in FIFO order.
+   * @description Observes captured commits before ordinary subscribers, in FIFO order.
    * Observer errors join notification errors and never roll back a commit.
+   * @param {(commit: StoreCommit<T>) => void} listener - Observer receiving each captured commit before ordinary delivery.
+   * @returns {Unsubscribe} Idempotent disposer for this commit observer.
    * @example
    * const stop = store.subscribeCommit(({ state, sequence }) => save(state, sequence));
    */
@@ -258,8 +264,10 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Immediately commits a literal value through the normal notification engine,
+   * @description Immediately commits a literal value through the normal notification engine,
    * bypassing middleware. The optional source identifies only this commit.
+   * @param {T} value - Literal replacement that bypasses middleware.
+   * @param {unknown} [source] - Identity associated only with this commit.
    * @example
    * store.replaceState(snapshot, replayToken);
    */
@@ -268,9 +276,10 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Runs a replacement or updater through middleware in registration order.
+   * @description Runs a replacement or updater through middleware in registration order.
    * A resolved value equal under `Object.is` does not commit or notify.
    * Middleware may delay, transform or discard the action.
+   * @param {SetStateAction<T>} nextState - Replacement or updater passed through middleware.
    * @example
    * const store = createStore(0);
    * store.setState(previous => previous + 1);
@@ -280,7 +289,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Replaces the value through middleware without invoking callable state.
+   * @description Replaces the value through middleware without invoking callable state.
+   * @param {T} value - Literal replacement, including callable values.
    * @example
    * const store = createStore(() => "initial");
    * store.set(() => "replacement");
@@ -290,7 +300,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Computes a replacement through the same middleware pipeline as `setState`.
+   * @description Computes a replacement through the same middleware pipeline as `setState`.
+   * @param {(previousState: T) => T} updater - Computes the next state from the current state.
    * @example
    * const store = createStore(0);
    * store.update(previous => previous + 1);
@@ -300,7 +311,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Appends middleware and invalidates the cached pipeline for future actions.
+   * @description Appends middleware and invalidates the cached pipeline for future actions.
+   * @param {Middleware<T>} middleware - Interceptor appended after existing middleware.
    * @example
    * store.pushMiddleware((action, next) => next(action));
    */
@@ -310,7 +322,8 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Prepends middleware and invalidates the cached pipeline for future actions.
+   * @description Prepends middleware and invalidates the cached pipeline for future actions.
+   * @param {Middleware<T>} middleware - Interceptor prepended before existing middleware.
    * @example
    * store.unshiftMiddleware((action, next) => next(action));
    */
@@ -320,9 +333,11 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Registers an argument-free callback without immediately invoking it.
+   * @description Registers an argument-free callback without immediately invoking it.
    * Duplicate callbacks own independent disposers; removal takes effect
    * immediately, even if the callback has a queued notification.
+   * @param {Listener} listener - Invalidation callback; read current state separately.
+   * @returns {Unsubscribe} Idempotent disposer that suppresses pending delivery.
    * @example
    * const unsubscribe = store.subscribe(() => render(store.getState()));
    * unsubscribe();
@@ -332,10 +347,14 @@ export class Store<T> implements StoreApi<T> {
   }
 
   /**
-   * Subscribes to selected committed values, using `Object.is` by default.
+   * @description Subscribes to selected committed values, using `Object.is` by default.
    * Selectors read captured commit values, whereas `getState()` reads the latest
    * state. A selector/equality failure preserves the previous baseline; a
    * listener failure occurs after the baseline advances.
+   * @param {Selector<T, Selection>} selector - Pure selector of captured committed state.
+   * @param {SelectorListener<Selection>} listener - Receives next selection and previous delivered baseline.
+   * @param {EqualityFn<Selection>} [equalityFn] - Comparison that skips equal selections; defaults to Object.is.
+   * @returns {Unsubscribe} Idempotent disposer for this selected subscription.
    * @example
    * const store = createStore({ count: 0 });
    * const unsubscribe = store.subscribeSelector(
@@ -496,10 +515,10 @@ export class Store<T> implements StoreApi<T> {
 }
 
 /**
- * Creates a fresh {@link Store}; the argument is always the initial value.
+ * @description Creates a fresh {@link Store}; the argument is always the initial value.
  * Functions are stored rather than called as lazy initializers.
- * @param initialState - Original value retained by `getInitialState()`.
- * @returns An independent store with no subscriptions or middleware.
+ * @param {T} initialState - Original value retained by `getInitialState()`.
+ * @returns {Store<T>} An independent store with no subscriptions or middleware.
  * @example
  * const store = createStore({ count: 0 });
  * store.update(state => ({ count: state.count + 1 }));

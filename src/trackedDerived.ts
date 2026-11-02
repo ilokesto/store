@@ -73,11 +73,25 @@ function matches(reads: Reads, next: object): boolean {
 }
 
 /**
- * Derives a readable while tracking synchronous root-property observations.
+ * @description Derives a readable while tracking synchronous root-property observations.
  * Nested values stay raw and are compared by identity, not deeply proxied.
  * Non-plain roots use whole-snapshot identity memoization. Snapshots (including
  * nested objects and prototypes) must be immutable, and compute must be pure.
  * Do not compare the tracked root by identity or retain it beyond compute.
+ * @param {ReadableStore<State>} source - Source of immutable snapshots and subscription ownership.
+ * @param {() => Readonly<State>} source.getState - Reads the latest committed snapshot.
+ * @param {() => Readonly<State>} source.getInitialState - Reads the original snapshot.
+ * @param {(listener: Listener) => Unsubscribe} source.subscribe - Registers an invalidation callback and returns its disposer.
+ * @param {ReadableStore<State>["subscribeSelector"]} source.subscribeSelector - Subscribes to selected snapshots with optional equality.
+ * @param {Selector<State, Selection>} compute - Pure synchronous computation; nested values remain raw.
+ * @param {TrackedDerivedOptions<Selection>} [options] - Output comparison policy.
+ * @param {EqualityFn<Selection>} [options.equalityFn] - Output equality; defaults to Object.is.
+ * @returns {DisposableReadableStore<Selection>} An independently disposable view with the following operations.
+ * - getState `() => Readonly<Selection>` - Reads the current selection.
+ * - getInitialState `() => Readonly<Selection>` - Reads the initial selection.
+ * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
+ * - subscribeSelector `ReadableStore<Selection>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
+ * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
  * @example
  * const label = trackedDerived(store, state => state.user.name);
  * // Replacing unrelated root fields skips compute when user is unchanged.
