@@ -1,5 +1,12 @@
 # @ilokesto/store
 
+## 2.1.1
+
+### Patch Changes
+
+- 1387983: Preserve English API documentation in declarations, including store subscriptions,
+  derived views, lifecycle ownership, focus write-back, and selector cache controls.
+
 ## 2.1.0
 
 ### Minor Changes
