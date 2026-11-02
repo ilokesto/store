@@ -5,15 +5,38 @@ import type { DisposableReadableStore } from "./withLifecycle.js";
 
 /** A disposable view whose writes update its parent through middleware. */
 export interface WritableFocus<T> extends DisposableReadableStore<T> {
+  /** Sends a replacement or updater through the parent's middleware pipeline. */
   setState(action: SetStateAction<T>): void;
+  /** Writes a literal value, including function values, back to the parent. */
   set(value: T): void;
+  /** Computes a new selection and immutably writes it back to the parent. */
   update(updater: (previous: T) => T): void;
 }
 
 /**
- * Selects a lazy view, optionally with an immutable write-back function.
+ * @description Selects a lazy view, optionally with an immutable write-back function.
  * Missing values and their creation policy belong to the supplied functions.
  * Disposing a view never disposes its parent.
+ * @param {ReadableStore<State>} parent - Source of immutable snapshots and subscription ownership.
+ * @param {() => Readonly<State>} parent.getState - Reads the latest committed snapshot.
+ * @param {() => Readonly<State>} parent.getInitialState - Reads the original snapshot.
+ * @param {(listener: Listener) => Unsubscribe} parent.subscribe - Registers an invalidation callback and returns its disposer.
+ * @param {ReadableStore<State>["subscribeSelector"]} parent.subscribeSelector - Subscribes to selected snapshots with optional equality.
+ * @param {(updater: (previousState: State) => State) => void} parent.update - Required by the writable overload to commit parent updates.
+ * @param {Selector<State, Selection>} read - Pure projection of parent state.
+ * @param {(state: State, value: Selection) => State} write - Immutable write-back function in the writable overload.
+ * @param {DerivedOptions<Selection>} [options] - Equality and input cache policy.
+ * @param {EqualityFn<Selection>} [options.equalityFn] - Output comparison; defaults to Object.is.
+ * @param {number} [options.cacheSize] - Positive input-tuple cache bound; defaults to one.
+ * @returns {DisposableReadableStore<Selection> | WritableFocus<Selection>} An independently disposable view with the following operations.
+ * - getState `() => Readonly<Selection>` - Reads the current selection.
+ * - getInitialState `() => Readonly<Selection>` - Reads the initial selection.
+ * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
+ * - subscribeSelector `ReadableStore<Selection>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
+ * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
+ * - setState `(action: SetStateAction<Selection>) => void` - Sends a replacement or updater through the parent.
+ * - set `(value: Selection) => void` - Writes a literal selection through the parent.
+ * - update `(updater: (previous: Selection) => Selection) => void` - Computes a selection and writes it back immutably.
  * @example
  * const count = focus(parent, state => state.count,
  *   (state, count) => ({ ...state, count }));

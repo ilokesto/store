@@ -12,8 +12,11 @@ export interface StoreFamilyOptions<Key, Instance> {
 
 /** A strongly retained, explicitly owned keyed store cache. */
 export interface StoreFamily<Key, Instance> {
+  /** Reuses the cached instance or creates one; throws after disposal. */
   get(key: Key): Instance;
+  /** Reports whether this key currently owns a cached instance. */
   has(key: Key): boolean;
+  /** Number of strongly retained entries. */
   readonly size: number;
   /** Releases one entry; a subsequent lookup creates a fresh instance. */
   remove(key: Key): boolean;
@@ -24,9 +27,20 @@ export interface StoreFamily<Key, Instance> {
 }
 
 /**
- * Reuses instances by Map key identity (SameValueZero, object reference identity).
+ * @description Reuses instances by Map key identity (SameValueZero, object reference identity).
  * Entries are strongly retained until explicitly removed, cleared, or disposed.
  * The family calls an instance's dispose method when releasing ownership.
+ * @param {(key: Key) => Instance} create - Creates an instance on the first lookup of each key.
+ * @param {StoreFamilyOptions<Key, Instance>} [options] - Lifecycle observers for cached instances.
+ * @param {(instance: Instance, key: Key) => void} [options.onCreate] - Called after caching an instance; failure releases it.
+ * @param {(instance: Instance, key: Key) => void} [options.onRemove] - Called after removal and attempted disposal, even on disposal failure.
+ * @returns {StoreFamily<Key, Instance>} Strongly retained keyed cache with explicit ownership.
+ * - get `(key: Key) => Instance` - Reuses or creates the instance for a key.
+ * - has `(key: Key) => boolean` - Reports whether the key is cached.
+ * - size `number` - Number of cached entries.
+ * - remove `(key: Key) => boolean` - Removes and disposes one entry, returning whether it existed.
+ * - clear `() => void` - Releases the current entries, retaining entries created during cleanup.
+ * - dispose `() => void` - Permanently releases entries and rejects future lookups.
  * @example
  * const counters = createStoreFamily((id: string) => createStore({ id, count: 0 }));
  * const counter = counters.get("one");

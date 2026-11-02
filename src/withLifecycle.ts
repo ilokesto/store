@@ -26,9 +26,21 @@ type Activation = {
 };
 
 /**
- * Adds first-subscription startup and last-unsubscription cleanup to a readable.
+ * @description Adds first-subscription startup and last-unsubscription cleanup to a readable.
  * Duplicate listeners remain independently owned. Startup failure cancels the
  * activation's subscriptions and runs already registered cleanup.
+ * @param {ReadableStore<T>} source - Source of immutable snapshots and subscription ownership.
+ * @param {() => Readonly<T>} source.getState - Reads the latest committed snapshot.
+ * @param {() => Readonly<T>} source.getInitialState - Reads the original snapshot.
+ * @param {(listener: Listener) => Unsubscribe} source.subscribe - Registers an invalidation callback and returns its disposer.
+ * @param {ReadableStore<T>["subscribeSelector"]} source.subscribeSelector - Subscribes to selected snapshots with optional equality.
+ * @param {LifecycleStart} start - Starts on first subscription; registers cleanup using its scope or return value.
+ * @returns {DisposableReadableStore<T>} An independently disposable view with the following operations.
+ * - getState `() => Readonly<T>` - Reads the current selection.
+ * - getInitialState `() => Readonly<T>` - Reads the initial selection.
+ * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
+ * - subscribeSelector `ReadableStore<T>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
+ * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
  * @example
  * const live = withLifecycle(store, ({ onCleanup }) => {
  *   onCleanup(connect(message => store.set(message)));

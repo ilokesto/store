@@ -13,6 +13,10 @@ A small, framework-independent TypeScript store for immutable state and selector
 
 ## Installation
 
+Contributors: follow the English API contract in [JSDOC.md](./JSDOC.md) and run
+`pnpm lint:jsdoc` (also included in `pnpm test:tooling`). Published declarations
+retain these comments for editor help.
+
 ```sh
 pnpm add @ilokesto/store
 ```

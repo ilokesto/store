@@ -24,9 +24,25 @@ export interface DerivedOptions<Selection> {
 }
 
 /**
- * Lazily computes a readable from one source or a readonly tuple of sources.
+ * @description Lazily computes a readable from one source or a readonly tuple of sources.
  * Source subscriptions exist only while the result has subscribers. Computation
  * must be pure; values are shallow readonly snapshots, not runtime clones.
+ * @param {ReadableStore<State>} source - Source of immutable snapshots and subscription ownership.
+ * @param {() => Readonly<State>} source.getState - Reads the latest committed snapshot.
+ * @param {() => Readonly<State>} source.getInitialState - Reads the original snapshot.
+ * @param {(listener: Listener) => Unsubscribe} source.subscribe - Registers an invalidation callback and returns its disposer.
+ * @param {ReadableStore<State>["subscribeSelector"]} source.subscribeSelector - Subscribes to selected snapshots with optional equality.
+ * @param {Sources} sources - Readonly source tuple used by the tuple overload.
+ * @param {((state: Readonly<State>) => Selection) | ((states: SourceValues<Sources>) => Selection)} compute - Pure computation over one snapshot or the source tuple.
+ * @param {DerivedOptions<Selection>} [options] - Equality and input cache policy.
+ * @param {EqualityFn<Selection>} [options.equalityFn] - Output comparison; defaults to Object.is.
+ * @param {number} [options.cacheSize] - Positive input-tuple cache bound; defaults to one.
+ * @returns {DisposableReadableStore<Selection>} An independently disposable view with the following operations.
+ * - getState `() => Readonly<Selection>` - Reads the current selection.
+ * - getInitialState `() => Readonly<Selection>` - Reads the initial selection.
+ * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
+ * - subscribeSelector `ReadableStore<Selection>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
+ * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
  * @example
  * const total = derived([price, quantity] as const, ([p, q]) => p * q);
  */

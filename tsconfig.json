@@ -14,7 +14,7 @@
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
-    "removeComments": true,
+    "removeComments": false,
     "types": ["node", "vitest/globals"]
   },
   "include": ["src"]

@@ -4,6 +4,11 @@ This repository owns the framework-agnostic Store library.
 Use Node 24.22.1 and pnpm 10.17.1 from this repository root.
 
 - Keep the public API minimal and framework-agnostic; preserve compatibility.
+- Follow [JSDOC.md](./JSDOC.md) for every runtime export, including internal
+  modules, public constructors and own public callable members. Run
+  `pnpm lint:jsdoc`; `test:tooling` enforces the semantic contract.
+- Preserve JSDoc in emitted declarations; source documentation changes must not
+  change runtime behavior or public signatures.
 - Source lives in `src/`; tests live in `tests/unit`, `tests/types`, and `tests/tooling`.
 - Maintain installation, basic usage, and limitations in `README.md` and
   `README.ko.md`. There is no official documentation website.
