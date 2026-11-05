@@ -58,6 +58,8 @@ unsubscribe();
 
 함수 자체를 포함한 값 교체에는 `set(value)`, 계산에는 `update(updater)`를 사용하세요.
 `setState(fn)`은 전달받은 함수를 항상 updater로 해석합니다.
+함수가 아닌 `set(value)` 값은 `setState(value)`와 같이 미들웨어에 그대로 전달합니다.
+함수 값은 실행하지 않고 저장할 수 있도록 감싸서 전달합니다.
 `Snapshot<T>`는 읽기, selector와 파생 view에서 함수 호출 시그니처를 보존합니다.
 객체와 배열 스냅샷에는 기존의 얕은 readonly 타입을 유지합니다.
 

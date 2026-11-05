@@ -297,13 +297,14 @@ export class Store<T> implements StoreApi<T> {
 
   /**
    * @description Replaces the value through middleware without invoking callable state.
+   * Non-callable replacements reach middleware unchanged, as with `setState(value)`.
    * @param {T} value - Literal replacement, including callable values.
    * @example
    * const store = createStore(() => "initial");
    * store.set(() => "replacement");
    */
   set(value: T): void {
-    this.setState(() => value);
+    this.setState(typeof value === "function" ? () => value : value);
   }
 
   /**

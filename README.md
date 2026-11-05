@@ -58,6 +58,8 @@ Framework hooks, persistence helpers, and DevTools integrations belong to higher
 
 Use `set(value)` for literal values, including functions, and `update(updater)` for
 computation. `setState(fn)` always treats its function argument as an updater.
+Non-function `set(value)` replacements reach middleware unchanged, like
+`setState(value)`; function literals are wrapped so they are stored without invocation.
 `Snapshot<T>` preserves function call signatures across reads, selectors, and
 derived views; object and array snapshots remain shallowly readonly.
 
