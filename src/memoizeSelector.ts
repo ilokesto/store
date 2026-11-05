@@ -1,11 +1,11 @@
-import type { EqualityFn, Selector } from "./index.js";
+import type { EqualityFn, Selector, Snapshot } from "./index.js";
 
 /** Controls one selector's bounded, least-recently-used input cache. */
 export interface MemoizeSelectorOptions<T> {
   /** Positive integer entry limit; defaults to one. */
   readonly maxSize?: number;
   /** Input equality, not output equality; defaults to Object.is. */
-  readonly equalityFn?: EqualityFn<Readonly<T>>;
+  readonly equalityFn?: EqualityFn<Snapshot<T>>;
 }
 
 /** A selector with an independently owned cache and explicit release operation. */
@@ -22,7 +22,7 @@ export interface MemoizedSelector<T, Selection> extends Selector<T, Selection> {
  * @param {Selector<T, Selection>} selector - Pure computation; failures are not cached.
  * @param {MemoizeSelectorOptions<T>} [options] - Input cache policy.
  * @param {number} [options.maxSize] - Positive safe integer entry limit; defaults to one.
- * @param {EqualityFn<Readonly<T>>} [options.equalityFn] - Input equality; defaults to Object.is.
+ * @param {EqualityFn<Snapshot<T>>} [options.equalityFn] - Input equality; defaults to Object.is.
  * @returns {MemoizedSelector<T, Selection>} Callable selector with an owned LRU cache.
  * - size `number` - Number of retained input/result pairs.
  * - clear `() => void` - Releases cached inputs and results.
@@ -39,8 +39,8 @@ export function memoizeSelector<T, Selection>(
     throw new RangeError("maxSize must be a positive safe integer");
   }
   const equals = options.equalityFn ?? Object.is;
-  const entries: Array<{ input: Readonly<T>; result: Selection }> = [];
-  const memoized = (input: Readonly<T>): Selection => {
+  const entries: Array<{ input: Snapshot<T>; result: Selection }> = [];
+  const memoized = (input: Snapshot<T>): Selection => {
     const index = entries.findIndex((entry) => equals(entry.input, input));
     if (index !== -1) {
       const [entry] = entries.splice(index, 1);

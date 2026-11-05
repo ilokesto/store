@@ -1,6 +1,6 @@
 import { derived } from "./derived.js";
 import type { DerivedOptions } from "./derived.js";
-import type { ReadableStore, Selector, SetStateAction, StoreApi } from "./index.js";
+import type { ReadableStore, Selector, SetStateAction, Snapshot, StoreApi } from "./index.js";
 import type { DisposableReadableStore } from "./withLifecycle.js";
 
 /** A disposable view whose writes update its parent through middleware. */
@@ -18,8 +18,8 @@ export interface WritableFocus<T> extends DisposableReadableStore<T> {
  * Missing values and their creation policy belong to the supplied functions.
  * Disposing a view never disposes its parent.
  * @param {ReadableStore<State>} parent - Source of immutable snapshots and subscription ownership.
- * @param {() => Readonly<State>} parent.getState - Reads the latest committed snapshot.
- * @param {() => Readonly<State>} parent.getInitialState - Reads the original snapshot.
+ * @param {() => Snapshot<State>} parent.getState - Reads the latest committed snapshot.
+ * @param {() => Snapshot<State>} parent.getInitialState - Reads the original snapshot.
  * @param {(listener: Listener) => Unsubscribe} parent.subscribe - Registers an invalidation callback and returns its disposer.
  * @param {ReadableStore<State>["subscribeSelector"]} parent.subscribeSelector - Subscribes to selected snapshots with optional equality.
  * @param {(updater: (previousState: State) => State) => void} parent.update - Required by the writable overload to commit parent updates.
@@ -29,8 +29,8 @@ export interface WritableFocus<T> extends DisposableReadableStore<T> {
  * @param {EqualityFn<Selection>} [options.equalityFn] - Output comparison; defaults to Object.is.
  * @param {number} [options.cacheSize] - Positive input-tuple cache bound; defaults to one.
  * @returns {DisposableReadableStore<Selection> | WritableFocus<Selection>} An independently disposable view with the following operations.
- * - getState `() => Readonly<Selection>` - Reads the current selection.
- * - getInitialState `() => Readonly<Selection>` - Reads the initial selection.
+ * - getState `() => Snapshot<Selection>` - Reads the current selection.
+ * - getInitialState `() => Snapshot<Selection>` - Reads the initial selection.
  * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
  * - subscribeSelector `ReadableStore<Selection>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
  * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
@@ -42,7 +42,7 @@ export interface WritableFocus<T> extends DisposableReadableStore<T> {
  *   (state, count) => ({ ...state, count }));
  */
 export function focus<State, Selection>(
-  parent: ReadableStore<State> & Pick<StoreApi<State>, "update">,
+  parent: NoInfer<ReadableStore<State>> & Pick<StoreApi<State>, "update">,
   read: Selector<State, Selection>,
   write: (state: State, value: Selection) => State,
   options?: DerivedOptions<Selection>
@@ -76,7 +76,7 @@ export function focus<State, Selection>(
     assertActive();
     parentUpdate.call(parent, state => {
       assertActive();
-      const previous = read(state);
+      const previous = read(state as Snapshot<State>);
       const next = updater(previous);
       return Object.is(previous, next) ? state : writeOrOptions(state, next);
     });
