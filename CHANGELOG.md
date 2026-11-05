@@ -1,5 +1,16 @@
 # @ilokesto/store
 
+## 2.1.2
+
+### Patch Changes
+
+- 5f000b3: Preserve callable snapshot types across store reads, commit observers, selectors,
+  derived views, focus, and memoized selectors while retaining shallow readonly
+  object and array snapshots.
+- 4514de2: Pass non-callable set replacements unchanged through middleware, matching
+  setState replacement actions so transformation and discard policies apply.
+  Continue protecting callable literal values from updater invocation.
+
 ## 2.1.1
 
 ### Patch Changes
