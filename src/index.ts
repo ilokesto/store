@@ -52,11 +52,18 @@ export type Dispatch<A> = (value: A) => void;
  */
 export type SetStateAction<S> = S | ((prevState: S) => S);
 /**
+ * Preserves callable snapshots and makes other snapshots shallowly readonly.
+ * Values are not cloned or frozen at runtime.
+ * @example
+ * const callback: Snapshot<(value: number) => string> = value => `${value}`;
+ */
+export type Snapshot<T> = T extends (...args: never[]) => unknown ? T : Readonly<T>;
+/**
  * Selects a value from a captured committed state without mutating it.
  * @example
  * const count: Selector<{ count: number }, number> = state => state.count;
  */
-export type Selector<T, Selection> = (state: Readonly<T>) => Selection;
+export type Selector<T, Selection> = (state: Snapshot<T>) => Selection;
 /**
  * Receives the next selection followed by its previous delivered baseline.
  * The baseline advances before this callback, even if the callback throws.
@@ -100,9 +107,9 @@ export type Middleware<T> = (
  */
 export interface ReadableStore<T> {
   /** Returns the latest committed value, including during reentrant delivery. */
-  getState(): Readonly<T>;
+  getState(): Snapshot<T>;
   /** Returns the original value supplied at construction, without cloning it. */
-  getInitialState(): Readonly<T>;
+  getInitialState(): Snapshot<T>;
   /** Registers an independent invalidation callback; does not call it immediately. */
   subscribe(listener: Listener): Unsubscribe;
   /**
@@ -138,7 +145,7 @@ export interface StoreApi<T> extends ReadableStore<T> {
 
 type Subscription<T> = {
   active: boolean;
-  readonly notify: (state: Readonly<T>) => void;
+  readonly notify: (state: Snapshot<T>) => void;
 };
 
 /**
@@ -148,9 +155,9 @@ type Subscription<T> = {
  */
 export type StoreCommit<T> = {
   /** Value committed by this change, even when newer commits already exist. */
-  readonly state: Readonly<T>;
+  readonly state: Snapshot<T>;
   /** Value immediately before this commit. */
-  readonly previousState: Readonly<T>;
+  readonly previousState: Snapshot<T>;
   /** Monotonically increasing number; the first changed value has sequence 1. */
   readonly sequence: number;
   /** Caller-supplied replacement identity; ordinary updates use undefined. */
@@ -216,24 +223,24 @@ export class Store<T> implements StoreApi<T> {
 
   /**
    * @description Returns the latest committed value without cloning or freezing it.
-   * @returns {Readonly<T>} Latest committed snapshot, not a frozen copy.
+   * @returns {Snapshot<T>} Latest committed snapshot, not a frozen copy.
    * @example
    * const count = createStore(1).getState();
    */
-  getState(): Readonly<T> {
-    return this.state;
+  getState(): Snapshot<T> {
+    return this.state as Snapshot<T>;
   }
 
   /**
    * @description Returns the original constructor value, even after later replacements.
-   * @returns {Readonly<T>} Original snapshot retained at construction.
+   * @returns {Snapshot<T>} Original snapshot retained at construction.
    * @example
    * const store = createStore(1);
    * store.set(2);
    * const initial = store.getInitialState(); // 1
    */
-  getInitialState(): Readonly<T> {
-    return this.initialState;
+  getInitialState(): Snapshot<T> {
+    return this.initialState as Snapshot<T>;
   }
 
   /**
@@ -367,8 +374,8 @@ export class Store<T> implements StoreApi<T> {
     listener: SelectorListener<Selection>,
     equalityFn: EqualityFn<Selection> = Object.is
   ): () => void {
-    let previousSelection = selector(this.state);
-    const selectorListener = (state: Readonly<T>) => {
+    let previousSelection = selector(this.state as Snapshot<T>);
+    const selectorListener = (state: Snapshot<T>) => {
       const nextSelection = selector(state);
 
       if (equalityFn(previousSelection, nextSelection)) {
@@ -383,7 +390,7 @@ export class Store<T> implements StoreApi<T> {
     return this.addSubscription(selectorListener);
   }
 
-  private addSubscription(notify: (state: Readonly<T>) => void): Unsubscribe {
+  private addSubscription(notify: (state: Snapshot<T>) => void): Unsubscribe {
     const subscription: Subscription<T> = { active: true, notify };
     this.subscriptions.add(subscription);
     return () => {
@@ -430,8 +437,8 @@ export class Store<T> implements StoreApi<T> {
       state: resolvedState,
       subscriptions: [...this.subscriptions],
       commit: {
-        state: resolvedState,
-        previousState: prevState,
+        state: resolvedState as Snapshot<T>,
+        previousState: prevState as Snapshot<T>,
         sequence: ++this.sequence,
         source,
       },
@@ -454,7 +461,7 @@ export class Store<T> implements StoreApi<T> {
       for (const subscription of subscriptions) {
         if (!subscription.active) continue;
         try {
-          subscription.notify(state);
+          subscription.notify(state as Snapshot<T>);
         } catch (error) {
           errors.push(error);
         }

@@ -1,6 +1,6 @@
 import { cancelComputation, scheduleComputation } from "./batch.js";
 import { Store } from "./index.js";
-import type { EqualityFn, ReadableStore, Unsubscribe } from "./index.js";
+import type { EqualityFn, ReadableStore, Snapshot, Unsubscribe } from "./index.js";
 import { memoizeSelector } from "./memoizeSelector.js";
 import { withLifecycle } from "./withLifecycle.js";
 import type { DisposableReadableStore } from "./withLifecycle.js";
@@ -11,7 +11,7 @@ type DerivedSource = ReadableStore<NonNullable<unknown> | null | undefined>;
 /** Snapshot values inferred from a readonly tuple of structural readables. */
 export type SourceValues<Sources extends readonly DerivedSource[]> = {
   readonly [Index in keyof Sources]: Sources[Index] extends ReadableStore<infer State>
-    ? Readonly<State>
+    ? Snapshot<State>
     : never;
 };
 
@@ -28,18 +28,18 @@ export interface DerivedOptions<Selection> {
  * Source subscriptions exist only while the result has subscribers. Computation
  * must be pure; values are shallow readonly snapshots, not runtime clones.
  * @param {ReadableStore<State>} source - Source of immutable snapshots and subscription ownership.
- * @param {() => Readonly<State>} source.getState - Reads the latest committed snapshot.
- * @param {() => Readonly<State>} source.getInitialState - Reads the original snapshot.
+ * @param {() => Snapshot<State>} source.getState - Reads the latest committed snapshot.
+ * @param {() => Snapshot<State>} source.getInitialState - Reads the original snapshot.
  * @param {(listener: Listener) => Unsubscribe} source.subscribe - Registers an invalidation callback and returns its disposer.
  * @param {ReadableStore<State>["subscribeSelector"]} source.subscribeSelector - Subscribes to selected snapshots with optional equality.
  * @param {Sources} sources - Readonly source tuple used by the tuple overload.
- * @param {((state: Readonly<State>) => Selection) | ((states: SourceValues<Sources>) => Selection)} compute - Pure computation over one snapshot or the source tuple.
+ * @param {((state: Snapshot<State>) => Selection) | ((states: SourceValues<Sources>) => Selection)} compute - Pure computation over one snapshot or the source tuple.
  * @param {DerivedOptions<Selection>} [options] - Equality and input cache policy.
  * @param {EqualityFn<Selection>} [options.equalityFn] - Output comparison; defaults to Object.is.
  * @param {number} [options.cacheSize] - Positive input-tuple cache bound; defaults to one.
  * @returns {DisposableReadableStore<Selection>} An independently disposable view with the following operations.
- * - getState `() => Readonly<Selection>` - Reads the current selection.
- * - getInitialState `() => Readonly<Selection>` - Reads the initial selection.
+ * - getState `() => Snapshot<Selection>` - Reads the current selection.
+ * - getInitialState `() => Snapshot<Selection>` - Reads the initial selection.
  * - subscribe `(listener: Listener) => Unsubscribe` - Subscribes without an immediate callback.
  * - subscribeSelector `ReadableStore<Selection>["subscribeSelector"]` - Subscribes to a selected value with equality filtering.
  * - dispose `() => void` - Permanently releases owned subscriptions; does not dispose sources.
@@ -48,7 +48,7 @@ export interface DerivedOptions<Selection> {
  */
 export function derived<State, Selection>(
   source: ReadableStore<State>,
-  compute: (state: Readonly<State>) => Selection,
+  compute: (state: Snapshot<State>) => Selection,
   options?: DerivedOptions<Selection>
 ): DisposableReadableStore<Selection>;
 export function derived<
@@ -87,11 +87,11 @@ export function derived<Selection>(
     if (current === undefined || !equals(current.value, next)) {
       current = { value: next };
     }
-    return current.value;
+    return current.value as Snapshot<Selection>;
   };
   const getOutput = () => {
     if (output === undefined) {
-      output = new Store(getState());
+      output = new Store<Selection>(getState());
     } else if (!connected) {
       output.replaceState(getState());
     }
@@ -114,7 +114,7 @@ export function derived<Selection>(
       if (initial === undefined) {
         initial = { value: evaluate(inputs.map((input) => input.getInitialState())) };
       }
-      return initial.value;
+      return initial.value as Snapshot<Selection>;
     },
     subscribe: (listener) => getOutput().subscribe(listener),
     subscribeSelector(selector, listener, equalityFn = Object.is) {

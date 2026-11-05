@@ -58,6 +58,8 @@ Framework hooks, persistence helpers, and DevTools integrations belong to higher
 
 Use `set(value)` for literal values, including functions, and `update(updater)` for
 computation. `setState(fn)` always treats its function argument as an updater.
+`Snapshot<T>` preserves function call signatures across reads, selectors, and
+derived views; object and array snapshots remain shallowly readonly.
 
 Notifications drain synchronously in FIFO order using captured commits. Listener
 failures are collected into an `AggregateError` after delivery; committed state is

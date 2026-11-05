@@ -58,6 +58,8 @@ unsubscribe();
 
 함수 자체를 포함한 값 교체에는 `set(value)`, 계산에는 `update(updater)`를 사용하세요.
 `setState(fn)`은 전달받은 함수를 항상 updater로 해석합니다.
+`Snapshot<T>`는 읽기, selector와 파생 view에서 함수 호출 시그니처를 보존합니다.
+객체와 배열 스냅샷에는 기존의 얕은 readonly 타입을 유지합니다.
 
 알림은 캡처한 커밋을 동기 FIFO 순서로 전달합니다. Listener 오류는 전달을 마친 뒤
 `AggregateError`로 모아 던지며 이미 커밋한 상태를 되돌리지 않습니다.
